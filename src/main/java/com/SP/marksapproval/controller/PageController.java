@@ -10,4 +10,9 @@ public class PageController {
     public String loginPage() {
         return "login";
     }
+
+    @GetMapping("/faculty-dashboard")
+    public String facultyDashboard() {
+        return "faculty-dashboard";
+}
 }
