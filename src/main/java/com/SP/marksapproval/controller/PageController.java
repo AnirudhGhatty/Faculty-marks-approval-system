@@ -14,5 +14,10 @@ public class PageController {
     @GetMapping("/faculty-dashboard")
     public String facultyDashboard() {
         return "faculty-dashboard";
+    }
+    
+     @GetMapping("/marks-entry")
+    public String marksEntry() {
+        return "marks-entry";
 }
 }
