@@ -1,5 +1,4 @@
-package main.java.com.SP.marksapproval.entity;
-
+package com.SP.marksapproval.entity;
 import jakarta.persistence.*;
 
 @Entity
