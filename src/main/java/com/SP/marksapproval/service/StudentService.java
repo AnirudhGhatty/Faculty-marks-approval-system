@@ -24,6 +24,10 @@ public class StudentService {
         return studentRepository.findById(id);
     }
 
+    public Optional<Student> getStudentByRollNo(String rollNo) {
+        return studentRepository.findByRollNo(rollNo);
+    }
+
     public Student saveStudent(Student student) {
         return studentRepository.save(student);
     }

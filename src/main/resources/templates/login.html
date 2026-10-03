@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,7 +24,7 @@
                 Sign in to continue
             </p>
 
-            <form>
+            <form action="/login" method="post">
 
                 <div class="mb-3">
                     <label for="userId" class="form-label">
@@ -34,7 +35,9 @@
                         type="text"
                         class="form-control"
                         id="userId"
+                        name="userId"
                         placeholder="Enter your User ID"
+                        required
                     >
                 </div>
 
@@ -47,7 +50,9 @@
                         type="password"
                         class="form-control"
                         id="password"
+                        name="password"
                         placeholder="Enter your password"
+                        required
                     >
                 </div>
 
@@ -56,8 +61,16 @@
                         Login As
                     </label>
 
-                    <select class="form-select" id="role">
-                        <option selected disabled>Select your role</option>
+                    <select
+                        class="form-select"
+                        id="role"
+                        name="role"
+                        required
+                    >
+                        <option value="" selected disabled>
+                            Select your role
+                        </option>
+
                         <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                         <option value="admin">Admin</option>
@@ -76,3 +89,4 @@
 
 </body>
 </html>
+```
