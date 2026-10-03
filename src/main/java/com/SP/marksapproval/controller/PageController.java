@@ -10,8 +10,6 @@ public class PageController {
     public String loginPage() {
         return "login";
     }
-
-<<<<<<< HEAD
     @GetMapping("/student-dashboard")
     public String studentDashboard() {
         return "student-dashboard";
@@ -24,8 +22,6 @@ public String studentResults() {
 public String adminDashboard() {
     return "admin-dashboard";
 }
-}
-=======
     @GetMapping("/faculty-dashboard")
     public String facultyDashboard() {
         return "faculty-dashboard";
@@ -36,4 +32,3 @@ public String adminDashboard() {
         return "marks-entry";
 }
 }
->>>>>>> origin/master
