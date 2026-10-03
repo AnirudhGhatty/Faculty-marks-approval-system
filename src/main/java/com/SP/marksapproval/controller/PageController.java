@@ -11,6 +11,21 @@ public class PageController {
         return "login";
     }
 
+<<<<<<< HEAD
+    @GetMapping("/student-dashboard")
+    public String studentDashboard() {
+        return "student-dashboard";
+    }
+    @GetMapping("/student-results")
+public String studentResults() {
+    return "student-results";
+}
+@GetMapping("/admin-dashboard")
+public String adminDashboard() {
+    return "admin-dashboard";
+}
+}
+=======
     @GetMapping("/faculty-dashboard")
     public String facultyDashboard() {
         return "faculty-dashboard";
@@ -21,3 +36,4 @@ public class PageController {
         return "marks-entry";
 }
 }
+>>>>>>> origin/master
