@@ -31,4 +31,8 @@ public class FacultyService {
     public void deleteFaculty(Integer id) {
         facultyRepository.deleteById(id);
     }
+
+    public Optional<Faculty> getFacultyByEmail(String email) {
+    return facultyRepository.findByEmail(email);
+}
 }
