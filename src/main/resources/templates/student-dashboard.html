@@ -22,7 +22,13 @@
             <span class="text-white">
                 Student
             </span>
-            <a href = "/login" class="btn btn-light btn-sm ms-3"> Logout </a>
+            
+<form th:action="@{/logout}" method="post" class="d-inline">
+    <button type="submit" class="btn btn-light btn-sm ms-3">
+        Logout
+    </button>
+</form>
+
         </div>
     </nav>
 

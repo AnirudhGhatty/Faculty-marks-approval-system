@@ -23,7 +23,8 @@
                 Sign in to continue
             </p>
 
-            <form action="/login" method="post">
+            <form th:action="@{/login}" method="post" id="loginForm">
+             <input type="hidden" name="username" id="securityUsername">
 
                 <div class="mb-3">
                     <label for="userId" class="form-label">
@@ -85,6 +86,16 @@
         </div>
 
     </div>
+
+    <script>
+    document.getElementById("loginForm").addEventListener("submit", function () {
+        const userId = document.getElementById("userId").value.trim();
+        const role = document.getElementById("role").value;
+
+        document.getElementById("securityUsername").value =
+            role + ":" + userId;
+    });
+</script>
 
 </body>
 </html>
