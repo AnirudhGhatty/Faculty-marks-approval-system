@@ -1,10 +1,15 @@
 
 package com.SP.marksapproval.controller;
 
+import com.SP.marksapproval.entity.Faculty;
 import com.SP.marksapproval.entity.Program;
 import com.SP.marksapproval.entity.Student;
+import com.SP.marksapproval.entity.Subject;
 import com.SP.marksapproval.repository.ProgramRepository;
+import com.SP.marksapproval.service.FacultyService;
 import com.SP.marksapproval.service.StudentService;
+import com.SP.marksapproval.service.SubjectService;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +22,22 @@ public class PageController {
 
     private final StudentService studentService;
     private final ProgramRepository programRepository;
+    private final FacultyService facultyService;
+    private final SubjectService subjectService;
 
     public PageController(
             StudentService studentService,
-            ProgramRepository programRepository) {
+            ProgramRepository programRepository,
+            FacultyService facultyService,
+            SubjectService subjectService) {
+
         this.studentService = studentService;
         this.programRepository = programRepository;
+        this.facultyService = facultyService;
+        this.subjectService = subjectService;
     }
+
+    // LOGIN AND DASHBOARDS
 
     @GetMapping("/login")
     public String loginPage() {
@@ -55,16 +69,17 @@ public class PageController {
         return "marks-entry";
     }
 
-    // List students
+    // =========================
+    // STUDENT MANAGEMENT
+    // =========================
+
     @GetMapping("/admin/students")
     public String adminStudents(Model model) {
         model.addAttribute("students", studentService.getAllStudents());
         model.addAttribute("programs", programRepository.findAll());
-
         return "admin-students";
     }
 
-    // Add student
     @PostMapping("/admin/students")
     public String addStudent(
             @RequestParam String rollNo,
@@ -92,27 +107,22 @@ public class PageController {
         student.setSection(section);
 
         studentService.saveStudent(student);
-
         return "redirect:/admin/students?success";
     }
 
-    // Delete a studentt from the existing student-management page
-
     @PostMapping("/admin/students/delete/{rollNo}")
     public String deleteStudent(@PathVariable String rollNo) {
-    Student student = studentService
-            .getStudentByRollNo(rollNo)
-            .orElse(null);
-    if (student == null) {
-        return "redirect:/admin/students?error=notfound";
+        Student student = studentService.getStudentByRollNo(rollNo)
+                .orElse(null);
+
+        if (student == null) {
+            return "redirect:/admin/students?error=notfound";
+        }
+
+        studentService.deleteStudent(student.getStudentId());
+        return "redirect:/admin/students?deleted";
     }
 
-    studentService.deleteStudent(student.getStudentId());
-
-    return "redirect:/admin/students?deleted";
-}
-
-    // Update a student from the existing student-management page
     @PostMapping("/admin/students/update/{rollNo}")
     public String updateStudent(
             @PathVariable String rollNo,
@@ -143,13 +153,141 @@ public class PageController {
         student.setSemester(semester);
         student.setSection(section);
 
-        // Preserve the existing password if the field is left blank.
         if (password != null && !password.isBlank()) {
             student.setPassword(password);
         }
 
         studentService.saveStudent(student);
-
         return "redirect:/admin/students?updated";
+    }
+
+    // =========================
+    // FACULTY MANAGEMENT
+    // =========================
+
+    @GetMapping("/admin/faculty")
+    public String adminFaculty(Model model) {
+        model.addAttribute("facultyMembers", facultyService.getAllFaculty());
+        return "admin-faculty";
+    }
+
+    @PostMapping("/admin/faculty")
+    public String addFaculty(
+            @RequestParam String name,
+            @RequestParam String email,
+            @RequestParam String department,
+            @RequestParam String password) {
+
+        if (facultyService.getFacultyByEmail(email).isPresent()) {
+            return "redirect:/admin/faculty?error=email";
+        }
+
+        Faculty faculty = new Faculty();
+        faculty.setName(name);
+        faculty.setEmail(email);
+        faculty.setDepartment(department);
+        faculty.setPassword(password);
+
+        facultyService.saveFaculty(faculty);
+        return "redirect:/admin/faculty?success";
+    }
+
+    @PostMapping("/admin/faculty/delete/{id}")
+    public String deleteFaculty(@PathVariable Integer id) {
+        Faculty faculty = facultyService.getFacultyById(id)
+                .orElse(null);
+
+        if (faculty == null) {
+            return "redirect:/admin/faculty?error=notfound";
+        }
+
+        facultyService.deleteFaculty(id);
+        return "redirect:/admin/faculty?deleted";
+    }
+
+    // =========================
+    // SUBJECT MANAGEMENT
+    // =========================
+
+    @GetMapping("/admin/subjects")
+    public String adminSubjects(Model model) {
+        model.addAttribute("subjects", subjectService.getAllSubjects());
+        model.addAttribute("programs", programRepository.findAll());
+        return "admin-subjects";
+    }
+
+    // Add subject
+    @PostMapping("/admin/subjects")
+    public String addSubject(
+            @RequestParam String subjectName,
+            @RequestParam Integer credits,
+            @RequestParam Integer semester,
+            @RequestParam String courseCode,
+            @RequestParam Integer programId) {
+
+        Program program = programRepository.findById(programId)
+                .orElse(null);
+
+        if (program == null) {
+            return "redirect:/admin/subjects?error=program";
+        }
+
+        Subject subject = new Subject();
+        subject.setSubjectName(subjectName);
+        subject.setCredits(credits);
+        subject.setSemester(semester);
+        subject.setCourseCode(courseCode);
+        subject.setProgram(program);
+
+        subjectService.saveSubject(subject);
+        return "redirect:/admin/subjects?success";
+    }
+
+    // Update subject
+    @PostMapping("/admin/subjects/update/{id}")
+    public String updateSubject(
+            @PathVariable Integer id,
+            @RequestParam String subjectName,
+            @RequestParam Integer credits,
+            @RequestParam Integer semester,
+            @RequestParam String courseCode,
+            @RequestParam Integer programId) {
+
+        Subject subject = subjectService.getSubjectById(id)
+                .orElse(null);
+
+        if (subject == null) {
+            return "redirect:/admin/subjects?error=notfound";
+        }
+
+        Program program = programRepository.findById(programId)
+                .orElse(null);
+
+        if (program == null) {
+            return "redirect:/admin/subjects?error=program";
+        }
+
+        subject.setSubjectName(subjectName);
+        subject.setCredits(credits);
+        subject.setSemester(semester);
+        subject.setCourseCode(courseCode);
+        subject.setProgram(program);
+
+        subjectService.saveSubject(subject);
+        return "redirect:/admin/subjects?updated";
+    }
+
+    // Delete subject
+    @PostMapping("/admin/subjects/delete/{id}")
+    public String deleteSubject(@PathVariable Integer id) {
+        Subject subject = subjectService.getSubjectById(id)
+                .orElse(null);
+
+        if (subject == null) {
+            return "redirect:/admin/subjects?error=notfound";
+        }
+
+        subjectService.deleteSubject(id);
+        return "redirect:/admin/subjects?deleted";
     }
 }
