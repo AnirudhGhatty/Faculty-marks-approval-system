@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.service;
 
 import com.SP.marksapproval.entity.Subject;
@@ -30,5 +31,12 @@ public class SubjectService {
 
     public void deleteSubject(Integer id) {
         subjectRepository.deleteById(id);
+    }
+
+    public List<Subject> getSubjectsByProgramAndSemester(
+            Integer programId,
+            Integer semester) {
+        return subjectRepository
+                .findByProgram_ProgramIdAndSemester(programId, semester);
     }
 }

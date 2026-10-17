@@ -36,4 +36,12 @@ public class SubjectController {
     public void deleteSubject(@PathVariable Integer id) {
         subjectService.deleteSubject(id);
     }
+
+    @GetMapping("/program/{programId}/semester/{semester}")
+    public List<Subject> getSubjectsByProgramAndSemester(
+        @PathVariable Integer programId,
+        @PathVariable Integer semester) {
+      return subjectService.getSubjectsByProgramAndSemester(
+            programId, semester);
+}
 }

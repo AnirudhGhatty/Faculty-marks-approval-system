@@ -20,6 +20,13 @@ public class Subject {
     @Column(nullable = false)
     private Integer semester;
 
+    @Column(name = "course_code", nullable = false)
+    private String courseCode;
+
+    @ManyToOne
+    @JoinColumn(name = "program_id", nullable = false)
+    private Program program;
+
     public Subject() {
     }
 
@@ -53,5 +60,21 @@ public class Subject {
 
     public void setSemester(Integer semester) {
         this.semester = semester;
+    }
+
+     public String getCourseCode() {
+        return courseCode;
+    }
+
+    public void setCourseCode(String courseCode) {
+        this.courseCode = courseCode;
+    }
+
+    public Program getProgram() {
+        return program;
+    }
+
+    public void setProgram(Program program) {
+        this.program = program;
     }
 }

@@ -28,6 +28,10 @@ public class Student {
 
     @Column(nullable = false)
     private String section;
+    
+    @ManyToOne
+    @JoinColumn(name = "program_id", nullable = false)
+    private Program program;
 
     public Student() {
     }
@@ -87,4 +91,12 @@ public class Student {
     public void setSection(String section) {
         this.section = section;
     }
+
+    public Program getProgram() {
+    return program;
+}
+
+    public void setProgram(Program program) {
+        this.program = program;
+}
 }
