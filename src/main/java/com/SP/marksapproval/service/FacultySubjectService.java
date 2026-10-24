@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.service;
 
 import com.SP.marksapproval.entity.FacultySubject;
@@ -30,5 +31,18 @@ public class FacultySubjectService {
 
     public void deleteAssignment(Integer id) {
         facultySubjectRepository.deleteById(id);
+    }
+
+    public List<FacultySubject> getAssignmentsByFaculty(Integer facultyId) {
+        return facultySubjectRepository.findByFaculty_FacultyId(facultyId);
+    }
+
+    public List<FacultySubject> getAssignmentsBySubject(Integer subjectId) {
+        return facultySubjectRepository.findBySubject_SubjectId(subjectId);
+    }
+
+    public boolean assignmentExists(Integer facultyId, Integer subjectId) {
+        return facultySubjectRepository
+                .existsByFaculty_FacultyIdAndSubject_SubjectId(facultyId, subjectId);
     }
 }

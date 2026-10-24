@@ -1,12 +1,18 @@
 
 package com.SP.marksapproval.controller;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.SP.marksapproval.entity.Faculty;
+import com.SP.marksapproval.entity.FacultySubject;
 import com.SP.marksapproval.entity.Program;
 import com.SP.marksapproval.entity.Student;
 import com.SP.marksapproval.entity.Subject;
 import com.SP.marksapproval.repository.ProgramRepository;
 import com.SP.marksapproval.service.FacultyService;
+import com.SP.marksapproval.service.FacultySubjectService;
 import com.SP.marksapproval.service.StudentService;
 import com.SP.marksapproval.service.SubjectService;
 
@@ -24,20 +30,25 @@ public class PageController {
     private final ProgramRepository programRepository;
     private final FacultyService facultyService;
     private final SubjectService subjectService;
+    private final FacultySubjectService facultySubjectService;
 
     public PageController(
             StudentService studentService,
             ProgramRepository programRepository,
             FacultyService facultyService,
-            SubjectService subjectService) {
+            SubjectService subjectService,
+            FacultySubjectService facultySubjectService) {
 
         this.studentService = studentService;
         this.programRepository = programRepository;
         this.facultyService = facultyService;
         this.subjectService = subjectService;
+        this.facultySubjectService = facultySubjectService;
     }
 
+    // =========================
     // LOGIN AND DASHBOARDS
+    // =========================
 
     @GetMapping("/login")
     public String loginPage() {
@@ -165,11 +176,26 @@ public class PageController {
     // FACULTY MANAGEMENT
     // =========================
 
-    @GetMapping("/admin/faculty")
-    public String adminFaculty(Model model) {
-        model.addAttribute("facultyMembers", facultyService.getAllFaculty());
-        return "admin-faculty";
-    }
+    
+@GetMapping("/admin/faculty")
+public String adminFaculty(Model model) {
+
+    List<Faculty> facultyMembers = facultyService.getAllFaculty();
+
+    Map<Integer, List<FacultySubject>> assignmentsByFaculty =
+            facultySubjectService.getAllAssignments()
+                    .stream()
+                    .collect(Collectors.groupingBy(
+                            assignment -> assignment.getFaculty().getFacultyId()
+                    ));
+
+    model.addAttribute("facultyMembers", facultyMembers);
+    model.addAttribute("subjects", subjectService.getAllSubjects());
+    model.addAttribute("assignmentsByFaculty", assignmentsByFaculty);
+
+    return "admin-faculty";
+}
+
 
     @PostMapping("/admin/faculty")
     public String addFaculty(
@@ -205,6 +231,26 @@ public class PageController {
         return "redirect:/admin/faculty?deleted";
     }
 
+    
+    @PostMapping("/admin/faculty/update/{id}")
+    public String updateFaculty(
+        @PathVariable Integer id,
+        @RequestParam String name,
+        @RequestParam String department) {
+
+    Faculty faculty = facultyService.getFacultyById(id)
+            .orElseThrow(() ->
+                    new RuntimeException("Faculty not found with ID: " + id));
+
+    faculty.setName(name);
+    faculty.setDepartment(department);
+
+    facultyService.saveFaculty(faculty);
+
+    return "redirect:/admin/faculty?updated";
+}
+
+
     // =========================
     // SUBJECT MANAGEMENT
     // =========================
@@ -216,7 +262,6 @@ public class PageController {
         return "admin-subjects";
     }
 
-    // Add subject
     @PostMapping("/admin/subjects")
     public String addSubject(
             @RequestParam String subjectName,
@@ -243,7 +288,6 @@ public class PageController {
         return "redirect:/admin/subjects?success";
     }
 
-    // Update subject
     @PostMapping("/admin/subjects/update/{id}")
     public String updateSubject(
             @PathVariable Integer id,
@@ -277,7 +321,6 @@ public class PageController {
         return "redirect:/admin/subjects?updated";
     }
 
-    // Delete subject
     @PostMapping("/admin/subjects/delete/{id}")
     public String deleteSubject(@PathVariable Integer id) {
         Subject subject = subjectService.getSubjectById(id)
@@ -289,5 +332,71 @@ public class PageController {
 
         subjectService.deleteSubject(id);
         return "redirect:/admin/subjects?deleted";
+    }
+
+    // =========================
+    // FACULTY-SUBJECT ASSIGNMENT
+    // =========================
+
+    @GetMapping("/admin/faculty-subjects")
+    public String adminFacultySubjects(Model model) {
+        model.addAttribute(
+                "assignments",
+                facultySubjectService.getAllAssignments()
+        );
+        model.addAttribute(
+                "facultyMembers",
+                facultyService.getAllFaculty()
+        );
+        model.addAttribute(
+                "subjects",
+                subjectService.getAllSubjects()
+        );
+
+        return "admin-faculty-subjects";
+    }
+
+    @PostMapping("/admin/faculty-subjects")
+    public String addFacultySubject(
+            @RequestParam Integer facultyId,
+            @RequestParam Integer subjectId) {
+
+        Faculty faculty = facultyService.getFacultyById(facultyId)
+                .orElse(null);
+
+        if (faculty == null) {
+            return "redirect:/admin/faculty-subjects?error=faculty";
+        }
+
+        Subject subject = subjectService.getSubjectById(subjectId)
+                .orElse(null);
+
+        if (subject == null) {
+            return "redirect:/admin/faculty-subjects?error=subject";
+        }
+
+        if (facultySubjectService.assignmentExists(facultyId, subjectId)) {
+            return "redirect:/admin/faculty-subjects?error=duplicate";
+        }
+
+        FacultySubject assignment = new FacultySubject();
+        assignment.setFaculty(faculty);
+        assignment.setSubject(subject);
+
+        facultySubjectService.saveAssignment(assignment);
+
+        return "redirect:/admin/faculty-subjects?success";
+    }
+
+    @PostMapping("/admin/faculty-subjects/delete/{id}")
+    public String deleteFacultySubject(@PathVariable Integer id) {
+
+        if (facultySubjectService.getAssignmentById(id).isEmpty()) {
+            return "redirect:/admin/faculty-subjects?error=notfound";
+        }
+
+        facultySubjectService.deleteAssignment(id);
+
+        return "redirect:/admin/faculty-subjects?deleted";
     }
 }
