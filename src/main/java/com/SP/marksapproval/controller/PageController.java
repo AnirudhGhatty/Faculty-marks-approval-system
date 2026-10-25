@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.Authentication;
+
 import com.SP.marksapproval.entity.Faculty;
 import com.SP.marksapproval.entity.FacultySubject;
 import com.SP.marksapproval.entity.Program;
@@ -70,15 +72,108 @@ public class PageController {
         return "admin-dashboard";
     }
 
-    @GetMapping("/faculty-dashboard")
-    public String facultyDashboard() {
-        return "faculty-dashboard";
+    
+@GetMapping("/faculty-dashboard")
+public String facultyDashboard(
+        Authentication authentication,
+        Model model) {
+
+    if (authentication == null) {
+        return "redirect:/login";
     }
 
-    @GetMapping("/marks-entry")
-    public String marksEntry() {
-        return "marks-entry";
+    String[] loginParts = authentication.getName().split(":", 2);
+
+    if (loginParts.length != 2
+            || !"faculty".equalsIgnoreCase(loginParts[0])) {
+        return "redirect:/faculty-dashboard";
     }
+
+    Faculty faculty = facultyService.getFacultyByEmail(loginParts[1])
+            .orElse(null);
+
+    if (faculty == null) {
+        return "redirect:/login";
+    }
+
+    List<FacultySubject> assignments =
+            facultySubjectService.getAssignmentsByFaculty(
+                    faculty.getFacultyId());
+
+    model.addAttribute("faculty", faculty);
+    model.addAttribute("assignments", assignments);
+
+    return "faculty-dashboard";
+}
+
+
+    
+
+@GetMapping("/marks-entry")
+public String marksEntry(
+        Authentication authentication,
+        @RequestParam(required = false) Integer subjectId,
+        @RequestParam(required = false) String ncp,
+        Model model) {
+
+    if (authentication == null) {
+        return "redirect:/login";
+    }
+
+    String[] loginParts = authentication.getName().split(":", 2);
+
+    if (loginParts.length != 2
+            || !"faculty".equalsIgnoreCase(loginParts[0])) {
+        return "redirect:/faculty-dashboard";
+    }
+
+    Faculty faculty = facultyService.getFacultyByEmail(loginParts[1])
+            .orElse(null);
+
+    if (faculty == null) {
+        return "redirect:/faculty-dashboard?error=account";
+    }
+
+    List<FacultySubject> assignments =
+            facultySubjectService.getAssignmentsByFaculty(
+                    faculty.getFacultyId());
+
+    model.addAttribute("faculty", faculty);
+    model.addAttribute("assignments", assignments);
+
+    FacultySubject selectedAssignment = null;
+
+    if (subjectId != null) {
+        selectedAssignment = assignments.stream()
+                .filter(assignment ->
+                        assignment.getSubject()
+                                .getSubjectId()
+                                .equals(subjectId))
+                .findFirst()
+                .orElse(null);
+
+        if (selectedAssignment == null) {
+            model.addAttribute(
+                    "errorMessage",
+                    "That subject is not assigned to your account.");
+        }
+    }
+
+    if (ncp != null
+            && !List.of("NCP1", "NCP2", "NCP3").contains(ncp)) {
+        model.addAttribute(
+                "errorMessage",
+                "Invalid NCP selection.");
+        ncp = null;
+    }
+
+    model.addAttribute("selectedAssignment", selectedAssignment);
+    model.addAttribute("selectedNcp", ncp);
+
+    return "marks-entry";
+}
+
+
 
     // =========================
     // STUDENT MANAGEMENT
