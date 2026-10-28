@@ -31,7 +31,6 @@
 
 <main class="container py-4">
 
-    <!-- Page Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h1 class="h2">Faculty-Subject Assignments</h1>
@@ -40,7 +39,6 @@
             </p>
         </div>
 
-        <!-- Navigation buttons -->
         <div class="d-flex flex-wrap gap-2">
             <a th:href="@{/admin/faculty}"
                class="btn btn-primary">
@@ -54,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Success Messages -->
     <div th:if="${param.success}" class="alert alert-success">
         Faculty-subject assignment created successfully!
     </div>
@@ -63,8 +60,8 @@
         Faculty-subject assignment removed successfully!
     </div>
 
-    <!-- Error Messages -->
     <div th:if="${param.error}" class="alert alert-danger">
+
         <span th:if="${param.error[0] == 'faculty'}">
             The selected faculty member could not be found.
         </span>
@@ -74,7 +71,15 @@
         </span>
 
         <span th:if="${param.error[0] == 'duplicate'}">
-            This faculty member is already assigned to that subject.
+            This faculty member is already assigned to this subject and section.
+        </span>
+
+        <span th:if="${param.error[0] == 'section'}">
+            Please select a valid section (maximum 20 characters).
+        </span>
+
+        <span th:if="${param.error[0] == 'sectionstudents'}">
+            No students match this subject's program, semester, and selected section.
         </span>
 
         <span th:if="${param.error[0] == 'notfound'}">
@@ -84,12 +89,13 @@
         <span th:if="${param.error[0] != 'faculty'
                       and param.error[0] != 'subject'
                       and param.error[0] != 'duplicate'
+                      and param.error[0] != 'section'
+                      and param.error[0] != 'sectionstudents'
                       and param.error[0] != 'notfound'}">
             Unable to process the request. Please try again.
         </span>
     </div>
 
-    <!-- Assign Subject -->
     <div class="card shadow-sm mb-4">
         <div class="card-header">
             <h2 class="h5 mb-0">Assign Subject to Faculty</h2>
@@ -104,7 +110,6 @@
 
                 <div class="row g-3">
 
-                    <!-- Faculty Selection -->
                     <div class="col-md-6">
                         <label for="facultyId" class="form-label">
                             Faculty Member
@@ -123,7 +128,6 @@
                         </select>
                     </div>
 
-                    <!-- Subject Selection -->
                     <div class="col-md-6">
                         <label for="subjectId" class="form-label">
                             Subject
@@ -142,16 +146,37 @@
                         </select>
                     </div>
 
+                    <div class="col-md-6">
+                        <label for="section" class="form-label">Section</label>
+
+                        <select id="section"
+                                name="section"
+                                class="form-select"
+                                required>
+                            <option value="">Select section</option>
+
+                            <option th:each="sectionOption : ${sectionOptions}"
+                                    th:value="${sectionOption}"
+                                    th:text="${sectionOption}">
+                            </option>
+                        </select>
+
+                        <div class="form-text">
+                            Sections are drawn from existing student records.
+                            The selected section must contain students in this
+                            subject's program and semester.
+                        </div>
+                    </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-primary mt-4">
-                    Assign Subject
+                    Assign Subject and Section
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Existing Assignments -->
     <div class="card shadow-sm">
         <div class="card-header">
             <h2 class="h5 mb-0">Current Assignments</h2>
@@ -170,6 +195,7 @@
                         <th>Course Code</th>
                         <th>Program</th>
                         <th>Semester</th>
+                        <th>Section</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -177,25 +203,20 @@
                     <tbody>
 
                     <tr th:if="${#lists.isEmpty(assignments)}">
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             No faculty-subject assignments found.
                         </td>
                     </tr>
 
                     <tr th:each="assignment : ${assignments}">
                         <td th:text="${assignment.assignmentId}"></td>
-
                         <td th:text="${assignment.faculty.name}"></td>
-
                         <td th:text="${assignment.faculty.email}"></td>
-
                         <td th:text="${assignment.subject.subjectName}"></td>
-
                         <td th:text="${assignment.subject.courseCode}"></td>
-
                         <td th:text="${assignment.subject.program.programName}"></td>
-
                         <td th:text="${assignment.subject.semester}"></td>
+                        <td th:text="${assignment.section}"></td>
 
                         <td>
                             <form method="post"

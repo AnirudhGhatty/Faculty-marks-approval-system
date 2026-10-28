@@ -72,44 +72,44 @@
         </a>
 
         <h2 class="fw-bold mt-3">Marks Entry</h2>
+
         <p class="muted-text">
             Select an assigned subject and the assessment you want to manage.
         </p>
     </div>
 
-    <!-- Error message -->
     <div class="alert alert-danger"
          th:if="${errorMessage != null}"
          th:text="${errorMessage}">
     </div>
 
-    <!-- Subject and NCP selection -->
     <section class="page-card mb-4">
         <h5 class="fw-bold mb-3">Select Subject and Assessment</h5>
 
         <form th:action="@{/marks-entry}" method="get">
 
             <div class="mb-3">
-                <label for="subjectId" class="form-label">
-                    Assigned Subject
+                <label for="assignmentId" class="form-label">
+                    Assigned Subject and Section
                 </label>
 
-                <select id="subjectId"
-                        name="subjectId"
+                <select id="assignmentId"
+                        name="assignmentId"
                         class="form-select"
                         required>
 
                     <option value="">Choose a subject</option>
 
                     <option th:each="assignment : ${assignments}"
-                            th:value="${assignment.subject.subjectId}"
+                            th:value="${assignment.assignmentId}"
                             th:text="${assignment.subject.subjectName
                                 + ' (' + assignment.subject.courseCode
                                 + ') - Semester '
-                                + assignment.subject.semester}"
+                                + assignment.subject.semester
+                                + ', Section ' + assignment.section}"
                             th:selected="${selectedAssignment != null
-                                and selectedAssignment.subject.subjectId
-                                == assignment.subject.subjectId}">
+                                and selectedAssignment.assignmentId
+                                == assignment.assignmentId}">
                     </option>
                 </select>
 
@@ -125,14 +125,17 @@
 
                 <select id="ncp" name="ncp" class="form-select">
                     <option value="">External / Total Marks</option>
+
                     <option value="NCP1"
                             th:selected="${selectedNcp == 'NCP1'}">
                         NCP 1
                     </option>
+
                     <option value="NCP2"
                             th:selected="${selectedNcp == 'NCP2'}">
                         NCP 2
                     </option>
+
                     <option value="NCP3"
                             th:selected="${selectedNcp == 'NCP3'}">
                         NCP 3
@@ -146,22 +149,23 @@
         </form>
     </section>
 
-    <!-- No assignments -->
     <section class="page-card"
              th:if="${assignments == null or #lists.isEmpty(assignments)}">
+
         <h5 class="fw-bold">No subjects assigned</h5>
+
         <p class="muted-text mb-0">
             You currently have no subjects assigned to your account.
             Please contact the administrator.
         </p>
     </section>
 
-    <!-- Selected subject -->
     <section class="page-card"
              th:if="${selectedAssignment != null}">
 
         <div class="d-flex flex-wrap justify-content-between
                     align-items-start gap-3 mb-4">
+
             <div>
                 <h4 class="fw-bold mb-1"
                     th:text="${selectedAssignment.subject.subjectName}">
@@ -184,6 +188,7 @@
 
         <div class="subject-details mb-4">
             <div class="row g-3">
+
                 <div class="col-md-4">
                     <div class="muted-text small">Semester</div>
                     <div class="fw-semibold"
@@ -201,6 +206,14 @@
                 </div>
 
                 <div class="col-md-4">
+                    <div class="muted-text small">Section</div>
+                    <div class="fw-semibold"
+                         th:text="${selectedAssignment.section}">
+                        A
+                    </div>
+                </div>
+
+                <div class="col-md-4">
                     <div class="muted-text small">Assessment</div>
                     <div class="fw-semibold"
                          th:text="${selectedNcp != null
@@ -209,27 +222,156 @@
                         External / Total Marks
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <div class="alert alert-info mb-0">
-            <strong>Subject loaded successfully!</strong>
+        <div class="d-flex flex-wrap justify-content-between
+                    align-items-center mb-3">
+
+            <div>
+                <h5 class="fw-bold mb-1">
+                    Students in Section
+                    <span th:text="${selectedAssignment.section}">A</span>
+                </h5>
+
+                <p class="muted-text mb-0">
+                    Students are filtered by this subject's program,
+                    semester, and assigned section.
+                </p>
+            </div>
+
+            <span class="badge text-bg-secondary"
+                  th:text="|${students == null ? 0 : students.size()} students|">
+                0 students
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Section</th>
+                    <th th:if="${selectedNcp != null}">Marks / 15</th>
+                    <th th:if="${selectedNcp != null}">Submission</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                <tr th:if="${students == null or #lists.isEmpty(students)}">
+                    <td th:colspan="${selectedNcp != null ? 7 : 5}"
+                        class="text-center muted-text py-4">
+                        No students match this subject and section.
+                        Check the student records and assignment.
+                    </td>
+                </tr>
+
+                <tr th:each="student, studentStat : ${students}"
+                    th:with="ncpRecord=${ncpMarksByStudent != null
+                        ? ncpMarksByStudent[student.studentId] : null},
+                        currentScore=${ncpRecord == null ? null
+                            : (selectedNcp == 'NCP1' ? ncpRecord.ncp1
+                            : (selectedNcp == 'NCP2' ? ncpRecord.ncp2
+                            : (selectedNcp == 'NCP3' ? ncpRecord.ncp3 : null)))},
+                        currentLocked=${ncpRecord == null ? false
+                            : (selectedNcp == 'NCP1' ? ncpRecord.ncp1Locked
+                            : (selectedNcp == 'NCP2' ? ncpRecord.ncp2Locked
+                            : (selectedNcp == 'NCP3' ? ncpRecord.ncp3Locked : false)))}">
+
+                    <td th:text="${studentStat.count}">1</td>
+                    <td th:text="${student.rollNo}">ROLL001</td>
+                    <td th:text="${student.name}">Student Name</td>
+                    <td th:text="${student.email}">student@example.com</td>
+                    <td th:text="${student.section}">A</td>
+
+                    <td th:if="${selectedNcp != null}">
+                        <form class="ncp-submit-form"
+                              th:action="@{/ncp-marks/submit}"
+                              method="post">
+
+                            <input type="hidden"
+                                   name="assignmentId"
+                                   th:value="${selectedAssignment.assignmentId}">
+
+                            <input type="hidden"
+                                   name="studentId"
+                                   th:value="${student.studentId}">
+
+                            <input type="hidden"
+                                   name="ncp"
+                                   th:value="${selectedNcp}">
+
+                            <input type="number"
+                                   name="score"
+                                   class="form-control"
+                                   min="0"
+                                   max="15"
+                                   step="1"
+                                   required
+                                   style="min-width: 95px;"
+                                   th:value="${currentScore}"
+                                   th:disabled="${currentLocked == true}"
+                                   th:attr="aria-label=|${selectedNcp} marks for ${student.name}|">
+                        </form>
+                    </td>
+
+                    <td th:if="${selectedNcp != null}">
+                        <div class="d-flex flex-column gap-2">
+                            <span class="badge text-bg-success ncp-locked-label"
+                                  th:if="${currentLocked == true}">
+                                Locked
+                            </span>
+
+                            <span class="badge text-bg-secondary ncp-unlocked-label"
+                                  th:if="${currentLocked != true}">
+                                Not submitted
+                            </span>
+
+                            <button type="button"
+                                    class="btn btn-primary btn-sm ncp-submit-button"
+                                    th:if="${currentLocked != true}"
+                                    th:attr="data-student-id=${student.studentId}">
+                                Submit &amp; Lock
+                            </button>
+
+                            <div class="small ncp-row-message"
+                                 role="status"
+                                 aria-live="polite">
+                            </div>
+                        </div>
+                    </td>
+
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-info mb-0 mt-3"
+             th:if="${selectedNcp == null}">
+            <strong>Student roster connected!</strong>
 
             <p class="mb-0 mt-2">
-                The subject and assessment selection are working.
-                The student list, marks-entry fields, saving, submission,
-                and assessment locking still need to be connected to the
-                database and implemented.
+                Select NCP1, NCP2 or NCP3 above to enter and submit marks.
+                External / Total Marks remains unchanged.
             </p>
         </div>
+
     </section>
 
-    <!-- No subject selected yet -->
     <section class="page-card"
              th:if="${selectedAssignment == null
                  and assignments != null
                  and not #lists.isEmpty(assignments)}">
+
         <h5 class="fw-bold">Ready to enter marks?</h5>
+
         <p class="muted-text mb-0">
             Choose an assigned subject and assessment above, then select
             <strong>Load Selection</strong>.
@@ -239,5 +381,92 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.querySelectorAll(".ncp-submit-button").forEach(function (button) {
+    button.addEventListener("click", async function () {
+        const row = button.closest("tr");
+        const form = row.querySelector(".ncp-submit-form");
+        const scoreInput = form.querySelector('input[name="score"]');
+        const message = row.querySelector(".ncp-row-message");
+        const unlockedLabel = row.querySelector(".ncp-unlocked-label");
+        const lockedLabel = row.querySelector(".ncp-locked-label");
+
+        message.textContent = "";
+        message.className = "small ncp-row-message";
+
+        if (!scoreInput.value.trim()
+                || !scoreInput.checkValidity()
+                || Number(scoreInput.value) < 0
+                || Number(scoreInput.value) > 15
+                || !Number.isInteger(Number(scoreInput.value))) {
+
+            message.textContent = "Enter a whole number from 0 to 15.";
+            message.classList.add("text-danger");
+            scoreInput.reportValidity();
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "Submit and permanently lock these " +
+            form.querySelector('input[name="ncp"]').value +
+            " marks for this student? You will not be able to edit them afterward."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Submitting...";
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new URLSearchParams(new FormData(form)),
+                headers: {
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin"
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || "Unable to submit marks."
+                );
+            }
+
+            scoreInput.disabled = true;
+            button.remove();
+
+            if (unlockedLabel) {
+                unlockedLabel.remove();
+            }
+
+            if (lockedLabel) {
+                lockedLabel.textContent = "Locked";
+            } else {
+                const badge = document.createElement("span");
+                badge.className = "badge text-bg-success ncp-locked-label";
+                badge.textContent = "Locked";
+                row.querySelector("td:last-child .d-flex").prepend(badge);
+            }
+
+            message.textContent = result.message || "Marks submitted and locked.";
+            message.classList.add("text-success");
+
+        } catch (error) {
+            message.textContent = error.message || "Something went wrong.";
+            message.classList.add("text-danger");
+
+            button.disabled = false;
+            button.textContent = "Submit & Lock";
+        }
+    });
+});
+</script>
+
 </body>
 </html>

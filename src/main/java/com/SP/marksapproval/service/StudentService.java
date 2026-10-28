@@ -1,6 +1,8 @@
+
 package com.SP.marksapproval.service;
 
 import com.SP.marksapproval.entity.Student;
+import com.SP.marksapproval.entity.Subject;
 import com.SP.marksapproval.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
@@ -34,5 +36,25 @@ public class StudentService {
 
     public void deleteStudent(Integer id) {
         studentRepository.deleteById(id);
+    }
+
+    public List<String> getDistinctSections() {
+        return studentRepository.findDistinctSections();
+    }
+
+    public List<Student> getStudentsForSubjectSection(
+            Subject subject,
+            String section) {
+
+        if (subject == null || section == null || section.isBlank()) {
+            return List.of();
+        }
+
+        return studentRepository
+                .findByProgram_ProgramIdAndSemesterAndSectionIgnoreCaseOrderByRollNoAsc(
+                        subject.getProgram().getProgramId(),
+                        subject.getSemester(),
+                        section.trim()
+                );
     }
 }

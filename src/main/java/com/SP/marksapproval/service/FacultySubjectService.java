@@ -13,7 +13,8 @@ public class FacultySubjectService {
 
     private final FacultySubjectRepository facultySubjectRepository;
 
-    public FacultySubjectService(FacultySubjectRepository facultySubjectRepository) {
+    public FacultySubjectService(
+            FacultySubjectRepository facultySubjectRepository) {
         this.facultySubjectRepository = facultySubjectRepository;
     }
 
@@ -34,15 +35,25 @@ public class FacultySubjectService {
     }
 
     public List<FacultySubject> getAssignmentsByFaculty(Integer facultyId) {
-        return facultySubjectRepository.findByFaculty_FacultyId(facultyId);
+        return facultySubjectRepository
+                .findByFaculty_FacultyId(facultyId);
     }
 
     public List<FacultySubject> getAssignmentsBySubject(Integer subjectId) {
-        return facultySubjectRepository.findBySubject_SubjectId(subjectId);
+        return facultySubjectRepository
+                .findBySubject_SubjectId(subjectId);
     }
 
-    public boolean assignmentExists(Integer facultyId, Integer subjectId) {
+    public boolean assignmentExists(
+            Integer facultyId,
+            Integer subjectId,
+            String section) {
+
         return facultySubjectRepository
-                .existsByFaculty_FacultyIdAndSubject_SubjectId(facultyId, subjectId);
+                .existsByFaculty_FacultyIdAndSubject_SubjectIdAndSectionIgnoreCase(
+                        facultyId,
+                        subjectId,
+                        section
+                );
     }
 }

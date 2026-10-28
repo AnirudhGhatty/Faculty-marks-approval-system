@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -192,7 +191,6 @@
 
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Email / Login ID</th>
                         <th>Department</th>
@@ -213,9 +211,6 @@
 
                         <!-- Main faculty row -->
                         <tr th:id="|faculty-row-${facultyStat.index}|">
-
-                            <td th:text="${faculty.facultyId}"></td>
-
                             <!-- Name -->
                             <td>
                                 <span class="display-value"
@@ -352,7 +347,7 @@
                                                name="facultyId"
                                                th:value="${faculty.facultyId}">
 
-                                        <div class="col-md-8">
+                                        <div class="col-md-5">
                                             <label th:for="|subject-${facultyStat.index}|"
                                                    class="form-label">
                                                 Assign a Subject
@@ -375,7 +370,23 @@
                                             </select>
                                         </div>
 
+                                        <!-- Added: required section parameter -->
                                         <div class="col-md-4">
+                                            <label th:for="|section-${facultyStat.index}|"
+                                                   class="form-label">
+                                                Section
+                                            </label>
+
+                                            <input type="text"
+                                                   class="form-control"
+                                                   name="section"
+                                                   th:id="|section-${facultyStat.index}|"
+                                                   placeholder="e.g. B"
+                                                   maxlength="20"
+                                                   required>
+                                        </div>
+
+                                        <div class="col-md-3">
                                             <button type="submit"
                                                     class="btn btn-primary w-100">
                                                 Assign Subject

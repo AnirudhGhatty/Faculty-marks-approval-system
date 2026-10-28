@@ -17,175 +17,156 @@
 
 <body>
 
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-dark bg-primary px-4">
-        <span class="navbar-brand mb-0 h1">
-            Marks Approval System
+<nav class="navbar navbar-dark bg-primary px-4">
+    <span class="navbar-brand mb-0 h1">
+        Marks Approval System
+    </span>
+
+    <div class="d-flex align-items-center text-white">
+        <span class="me-3"
+              th:text="${faculty.name}">
+            Faculty
         </span>
 
-        <div class="d-flex align-items-center text-white">
-            <span class="me-3"
-                  th:text="${faculty.name}">
-                Faculty
-            </span>
+        <form th:action="@{/logout}"
+              method="post"
+              class="d-inline">
 
-            <form th:action="@{/logout}"
-                  method="post"
-                  class="d-inline">
+            <button type="submit" class="btn btn-light btn-sm">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
 
-                <button type="submit"
-                        class="btn btn-light btn-sm">
-                    Logout
-                </button>
+<div class="container py-5">
 
-            </form>
-        </div>
-    </nav>
+    <div class="mb-4">
+        <h2>
+            Welcome,
+            <span th:text="${faculty.name}">Faculty</span>!
+        </h2>
 
-    <!-- Main Content -->
-    <div class="container py-5">
+        <p class="text-muted">
+            Manage your assigned subjects and student marks.
+        </p>
+    </div>
 
-        <!-- Welcome Section -->
-        <div class="mb-4">
-            <h2>
-                Welcome,
-                <span th:text="${faculty.name}">Faculty</span>!
-            </h2>
+    <div class="row g-4 mb-5">
 
-            <p class="text-muted">
-                Manage your assigned subjects and student marks.
-            </p>
-        </div>
-
-        <!-- Dashboard Statistics -->
-        <div class="row g-4 mb-5">
-
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h6 class="text-muted">Assigned Subjects</h6>
-
-                        <h2 th:text="${assignments.size()}">0</h2>
-                    </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Teaching Assignments</h6>
+                    <h2 th:text="${assignments.size()}">0</h2>
                 </div>
             </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h6 class="text-muted">Total Students</h6>
-
-                        <h2>—</h2>
-
-                        <small class="text-muted">
-                            Student statistics not yet available
-                        </small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h6 class="text-muted">Pending Submissions</h6>
-
-                        <h2>—</h2>
-
-                        <small class="text-muted">
-                            Submission tracking not yet implemented
-                        </small>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Assigned Subjects -->
-        <div class="card shadow-sm">
-
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">My Assigned Subjects</h5>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Students</h6>
+                    <h2>—</h2>
+                    <small class="text-muted">
+                        Student statistics not yet available
+                    </small>
+                </div>
             </div>
+        </div>
 
-            <div class="card-body">
-
-                <!-- No Assignments -->
-                <div th:if="${assignments.isEmpty()}"
-                     class="alert alert-info mb-0">
-
-                    <h6 class="alert-heading">
-                        No subjects assigned
-                    </h6>
-
-                    <p class="mb-0">
-                        You currently have no assigned subjects.
-                        Please contact the administrator if you believe
-                        this is a mistake.
-                    </p>
-
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Pending Submissions</h6>
+                    <h2>—</h2>
+                    <small class="text-muted">
+                        Submission tracking not yet implemented
+                    </small>
                 </div>
-
-                <!-- Assignments Table -->
-                <div th:unless="${assignments.isEmpty()}"
-                     class="table-responsive">
-
-                    <table class="table table-hover align-middle">
-
-                        <thead class="table-light">
-                            <tr>
-                                <th>Subject</th>
-                                <th>Course Code</th>
-                                <th>Semester</th>
-                                <th>Credits</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <tr th:each="assignment : ${assignments}">
-
-                                <td class="fw-semibold"
-                                    th:text="${assignment.subject.subjectName}">
-                                    Subject Name
-                                </td>
-
-                                <td th:text="${assignment.subject.courseCode}">
-                                    COURSE001
-                                </td>
-
-                                <td>
-                                    <span
-                                        th:text="${assignment.subject.semester}">
-                                        1
-                                    </span>
-                                </td>
-
-                                <td th:text="${assignment.subject.credits}">
-                                    4
-                                </td>
-
-                                <td>
-                                    <a
-                                        th:href="@{/marks-entry(subjectId=${assignment.subject.subjectId})}"
-                                        class="btn btn-primary btn-sm">
-
-                                        Enter Marks
-                                    </a>
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
             </div>
         </div>
 
     </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">My Assigned Subjects &amp; Sections</h5>
+        </div>
+
+        <div class="card-body">
+
+            <div th:if="${assignments.isEmpty()}"
+                 class="alert alert-info mb-0">
+
+                <h6 class="alert-heading">
+                    No subjects assigned
+                </h6>
+
+                <p class="mb-0">
+                    You currently have no assigned subjects.
+                    Please contact the administrator if you believe
+                    this is a mistake.
+                </p>
+            </div>
+
+            <div th:unless="${assignments.isEmpty()}"
+                 class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                    <tr>
+                        <th>Subject</th>
+                        <th>Course Code</th>
+                        <th>Semester</th>
+                        <th>Credits</th>
+                        <th>Section</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="assignment : ${assignments}">
+
+                        <td class="fw-semibold"
+                            th:text="${assignment.subject.subjectName}">
+                            Subject Name
+                        </td>
+
+                        <td th:text="${assignment.subject.courseCode}">
+                            COURSE001
+                        </td>
+
+                        <td th:text="${assignment.subject.semester}">
+                            1
+                        </td>
+
+                        <td th:text="${assignment.subject.credits}">
+                            4
+                        </td>
+
+                        <td th:text="${assignment.section}">A</td>
+
+                        <td>
+                            <a
+                                th:href="@{/marks-entry(assignmentId=${assignment.assignmentId})}"
+                                class="btn btn-primary btn-sm">
+                                Enter Marks
+                            </a>
+                        </td>
+
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

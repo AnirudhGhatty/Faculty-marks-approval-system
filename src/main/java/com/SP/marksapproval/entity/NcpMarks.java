@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.entity;
 
 import jakarta.persistence.*;
@@ -6,7 +7,10 @@ import jakarta.persistence.*;
 @Table(
     name = "ncp_marks",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"student_id", "subject_id"})
+        @UniqueConstraint(
+            name = "uk_ncp_marks_student_subject",
+            columnNames = {"student_id", "subject_id"}
+        )
     }
 )
 public class NcpMarks {
@@ -33,7 +37,17 @@ public class NcpMarks {
     @Column(name = "ncp3")
     private Integer ncp3;
 
-    public NcpMarks() {}
+    @Column(name = "ncp1_locked", nullable = false)
+    private Boolean ncp1Locked = false;
+
+    @Column(name = "ncp2_locked", nullable = false)
+    private Boolean ncp2Locked = false;
+
+    @Column(name = "ncp3_locked", nullable = false)
+    private Boolean ncp3Locked = false;
+
+    public NcpMarks() {
+    }
 
     public Integer getNcpMarkId() {
         return ncpMarkId;
@@ -81,5 +95,29 @@ public class NcpMarks {
 
     public void setNcp3(Integer ncp3) {
         this.ncp3 = ncp3;
+    }
+
+    public Boolean getNcp1Locked() {
+        return ncp1Locked;
+    }
+
+    public void setNcp1Locked(Boolean ncp1Locked) {
+        this.ncp1Locked = ncp1Locked;
+    }
+
+    public Boolean getNcp2Locked() {
+        return ncp2Locked;
+    }
+
+    public void setNcp2Locked(Boolean ncp2Locked) {
+        this.ncp2Locked = ncp2Locked;
+    }
+
+    public Boolean getNcp3Locked() {
+        return ncp3Locked;
+    }
+
+    public void setNcp3Locked(Boolean ncp3Locked) {
+        this.ncp3Locked = ncp3Locked;
     }
 }

@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.entity;
 
 import jakarta.persistence.*;
@@ -6,7 +7,10 @@ import jakarta.persistence.*;
 @Table(
     name = "faculty_subject",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"faculty_id", "subject_id"})
+        @UniqueConstraint(
+            name = "uk_faculty_subject_section",
+            columnNames = {"faculty_id", "subject_id", "section"}
+        )
     }
 )
 public class FacultySubject {
@@ -23,6 +27,9 @@ public class FacultySubject {
     @ManyToOne
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
+
+    @Column(name = "section", nullable = false, length = 20)
+    private String section;
 
     public FacultySubject() {
     }
@@ -49,5 +56,13 @@ public class FacultySubject {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
     }
 }
