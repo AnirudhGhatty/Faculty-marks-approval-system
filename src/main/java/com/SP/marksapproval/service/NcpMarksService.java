@@ -21,7 +21,11 @@ public class NcpMarksService {
     }
 
     public List<NcpMarks> getNcpMarksBySubjectId(Integer subjectId) {
-    return ncpMarksRepository.findBySubject_SubjectId(subjectId);
+        return ncpMarksRepository.findBySubject_SubjectId(subjectId);
+    }
+
+    public List<NcpMarks> getNcpMarksByStudentId(Integer studentId) {
+        return ncpMarksRepository.findByStudent_StudentId(studentId);
     }
 
     public List<NcpMarks> getAllNcpMarks() {
@@ -38,6 +42,79 @@ public class NcpMarksService {
 
     public void deleteNcpMarks(Integer id) {
         ncpMarksRepository.deleteById(id);
+    }
+
+    /**
+     * Approves one submitted NCP for a student and subject.
+     * Other NCP approval states remain unchanged.
+     */
+    @Transactional
+    public NcpMarks approveNcpMarks(Integer id, String ncp) {
+
+        NcpMarks record = ncpMarksRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "NCP marks record not found."));
+
+        if (ncp == null) {
+            throw new IllegalArgumentException(
+                    "An NCP assessment must be selected.");
+        }
+
+        String selectedNcp = ncp.trim().toUpperCase();
+
+        switch (selectedNcp) {
+
+            case "NCP1":
+                if (!Boolean.TRUE.equals(record.getNcp1Locked())
+                        || record.getNcp1() == null) {
+                    throw new IllegalStateException(
+                            "NCP1 has not been submitted yet.");
+                }
+
+                if (Boolean.TRUE.equals(record.getNcp1Approved())) {
+                    throw new IllegalStateException(
+                            "NCP1 has already been approved.");
+                }
+
+                record.setNcp1Approved(true);
+                break;
+
+            case "NCP2":
+                if (!Boolean.TRUE.equals(record.getNcp2Locked())
+                        || record.getNcp2() == null) {
+                    throw new IllegalStateException(
+                            "NCP2 has not been submitted yet.");
+                }
+
+                if (Boolean.TRUE.equals(record.getNcp2Approved())) {
+                    throw new IllegalStateException(
+                            "NCP2 has already been approved.");
+                }
+
+                record.setNcp2Approved(true);
+                break;
+
+            case "NCP3":
+                if (!Boolean.TRUE.equals(record.getNcp3Locked())
+                        || record.getNcp3() == null) {
+                    throw new IllegalStateException(
+                            "NCP3 has not been submitted yet.");
+                }
+
+                if (Boolean.TRUE.equals(record.getNcp3Approved())) {
+                    throw new IllegalStateException(
+                            "NCP3 has already been approved.");
+                }
+
+                record.setNcp3Approved(true);
+                break;
+
+            default:
+                throw new IllegalArgumentException(
+                        "Invalid assessment. Select NCP1, NCP2 or NCP3.");
+        }
+
+        return ncpMarksRepository.save(record);
     }
 
     /**

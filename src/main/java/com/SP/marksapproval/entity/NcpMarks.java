@@ -46,6 +46,16 @@ public class NcpMarks {
     @Column(name = "ncp3_locked", nullable = false)
     private Boolean ncp3Locked = false;
 
+    // Approval fields
+    @Column(name = "ncp1_approved", nullable = false)
+    private Boolean ncp1Approved = false;
+
+    @Column(name = "ncp2_approved", nullable = false)
+    private Boolean ncp2Approved = false;
+
+    @Column(name = "ncp3_approved", nullable = false)
+    private Boolean ncp3Approved = false;
+
     public NcpMarks() {
     }
 
@@ -119,5 +129,30 @@ public class NcpMarks {
 
     public void setNcp3Locked(Boolean ncp3Locked) {
         this.ncp3Locked = ncp3Locked;
+    }
+
+    // Approval getters and setters
+    public Boolean getNcp1Approved() {
+        return ncp1Approved;
+    }
+
+    public void setNcp1Approved(Boolean ncp1Approved) {
+        this.ncp1Approved = ncp1Approved;
+    }
+
+    public Boolean getNcp2Approved() {
+        return ncp2Approved;
+    }
+
+    public void setNcp2Approved(Boolean ncp2Approved) {
+        this.ncp2Approved = ncp2Approved;
+    }
+
+    public Boolean getNcp3Approved() {
+        return ncp3Approved;
+    }
+
+    public void setNcp3Approved(Boolean ncp3Approved) {
+        this.ncp3Approved = ncp3Approved;
     }
 }

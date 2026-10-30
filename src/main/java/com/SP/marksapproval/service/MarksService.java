@@ -21,6 +21,10 @@ public class MarksService {
         return marksRepository.findAll();
     }
 
+    public List<Marks> getMarksByStudentId(Integer studentId) {
+    return marksRepository.findByStudent_StudentId(studentId);
+    }
+
     public Optional<Marks> getMarksById(MarksId id) {
         return marksRepository.findById(id);
     }

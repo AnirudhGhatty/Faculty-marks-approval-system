@@ -1,40 +1,24 @@
 
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Faculty Dashboard - Marks Approval System</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
 
 <nav class="navbar navbar-dark bg-primary px-4">
-    <span class="navbar-brand mb-0 h1">
-        Marks Approval System
-    </span>
+    <span class="navbar-brand mb-0 h1">Marks Approval System</span>
 
     <div class="d-flex align-items-center text-white">
-        <span class="me-3"
-              th:text="${faculty.name}">
-            Faculty
-        </span>
+        <span class="me-3" th:text="${faculty.name}">Faculty</span>
 
-        <form th:action="@{/logout}"
-              method="post"
-              class="d-inline">
-
-            <button type="submit" class="btn btn-light btn-sm">
-                Logout
-            </button>
+        <form th:action="@{/logout}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-light btn-sm">Logout</button>
         </form>
     </div>
 </nav>
@@ -43,45 +27,74 @@
 
     <div class="mb-4">
         <h2>
-            Welcome,
-            <span th:text="${faculty.name}">Faculty</span>!
+            Welcome, <span th:text="${faculty.name}">Faculty</span>!
         </h2>
-
         <p class="text-muted">
             Manage your assigned subjects and student marks.
         </p>
     </div>
 
+    <!-- Dashboard Statistics -->
     <div class="row g-4 mb-5">
 
-        <div class="col-md-4">
+        <!-- Teaching Assignments -->
+        <div class="col-md-3">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Teaching Assignments</h6>
                     <h2 th:text="${assignments.size()}">0</h2>
+                    <small class="text-muted">Your assigned subjects</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <!-- Total Students -->
+        <div class="col-md-3">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Total Students</h6>
-                    <h2>—</h2>
+                    <h2 th:text="${totalStudents}">0</h2>
                     <small class="text-muted">
-                        Student statistics not yet available
+                        Students across your assigned sections
                     </small>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <!-- NCP1 Pending -->
+        <div class="col-md-2">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h6 class="text-muted">Pending Submissions</h6>
-                    <h2>—</h2>
+                    <h6 class="text-muted">NCP1 Pending</h6>
+                    <h2 th:text="${ncp1Pending}">0</h2>
                     <small class="text-muted">
-                        Submission tracking not yet implemented
+                        Students yet to submit NCP1
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- NCP2 Pending -->
+        <div class="col-md-2">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">NCP2 Pending</h6>
+                    <h2 th:text="${ncp2Pending}">0</h2>
+                    <small class="text-muted">
+                        Students yet to submit NCP2
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- NCP3 Pending -->
+        <div class="col-md-2">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">NCP3 Pending</h6>
+                    <h2 th:text="${ncp3Pending}">0</h2>
+                    <small class="text-muted">
+                        Students yet to submit NCP3
                     </small>
                 </div>
             </div>
@@ -89,9 +102,10 @@
 
     </div>
 
+    <!-- Assigned Subjects -->
     <div class="card shadow-sm">
 
-        <div class="card-header bg-white py-3">
+        <div class="card-header bg-white">
             <h5 class="mb-0">My Assigned Subjects &amp; Sections</h5>
         </div>
 
@@ -99,70 +113,61 @@
 
             <div th:if="${assignments.isEmpty()}"
                  class="alert alert-info mb-0">
-
-                <h6 class="alert-heading">
-                    No subjects assigned
-                </h6>
-
-                <p class="mb-0">
-                    You currently have no assigned subjects.
-                    Please contact the administrator if you believe
-                    this is a mistake.
-                </p>
+                No subjects have been assigned to you yet.
             </div>
 
             <div th:unless="${assignments.isEmpty()}"
                  class="table-responsive">
 
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle mb-0">
 
-                    <thead class="table-light">
-                    <tr>
-                        <th>Subject</th>
-                        <th>Course Code</th>
-                        <th>Semester</th>
-                        <th>Credits</th>
-                        <th>Section</th>
-                        <th>Action</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Course Code</th>
+                            <th>Semester</th>
+                            <th>Credits</th>
+                            <th>Section</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
 
                     <tbody>
-                    <tr th:each="assignment : ${assignments}">
+                        <tr th:each="assignment : ${assignments}">
 
-                        <td class="fw-semibold"
-                            th:text="${assignment.subject.subjectName}">
-                            Subject Name
-                        </td>
+                            <td th:text="${assignment.subject.subjectName}">
+                                Subject Name
+                            </td>
 
-                        <td th:text="${assignment.subject.courseCode}">
-                            COURSE001
-                        </td>
+                            <td th:text="${assignment.subject.courseCode}">
+                                Course Code
+                            </td>
 
-                        <td th:text="${assignment.subject.semester}">
-                            1
-                        </td>
+                            <td th:text="${assignment.subject.semester}">
+                                Semester
+                            </td>
 
-                        <td th:text="${assignment.subject.credits}">
-                            4
-                        </td>
+                            <td th:text="${assignment.subject.credits}">
+                                Credits
+                            </td>
 
-                        <td th:text="${assignment.section}">A</td>
+                            <td th:text="${assignment.section}">
+                                Section
+                            </td>
 
-                        <td>
-                            <a
-                                th:href="@{/marks-entry(assignmentId=${assignment.assignmentId})}"
-                                class="btn btn-primary btn-sm">
-                                Enter Marks
-                            </a>
-                        </td>
+                            <td>
+                                <a th:href="@{/marks-entry(assignmentId=${assignment.assignmentId})}"
+                                   class="btn btn-primary btn-sm">
+                                    Enter Marks
+                                </a>
+                            </td>
 
-                    </tr>
+                        </tr>
                     </tbody>
 
                 </table>
-            </div>
 
+            </div>
         </div>
     </div>
 

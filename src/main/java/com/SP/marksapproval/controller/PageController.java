@@ -50,43 +50,372 @@ public class PageController {
     public String loginPage() {
         return "login";
     }
-    @GetMapping("/student-dashboard")
-    public String studentDashboard() {
-        return "student-dashboard";
+   @GetMapping("/student-dashboard")
+public String studentDashboard(
+        Authentication authentication,
+        Model model) {
+
+    if (authentication == null || !authentication.isAuthenticated()) {
+        return "redirect:/login";
     }
-    @GetMapping("/student-results")
-    public String studentResults() {
-        return "student-results";
+
+    String[] loginParts = authentication.getName().split(":", 2);
+
+    if (loginParts.length != 2
+            || !"student".equalsIgnoreCase(loginParts[0])) {
+        return "redirect:/login";
     }
-    @GetMapping("/admin-dashboard")
-    public String adminDashboard() {
-        return "admin-dashboard";
+
+    Student student = studentService
+            .getStudentByRollNo(loginParts[1])
+            .orElse(null);
+
+    if (student == null) {
+        return "redirect:/login";
     }
-    @GetMapping("/faculty-dashboard")
-    public String facultyDashboard(
-            Authentication authentication,
-            Model model) {
-        if (authentication == null) {
-            return "redirect:/login";
+
+    List<Subject> subjects =
+            subjectService.getSubjectsByProgramAndSemester(
+                    student.getProgram().getProgramId(),
+                    student.getSemester());
+
+    List<NcpMarks> ncpRecords =
+            ncpMarksService.getNcpMarksByStudentId(
+                    student.getStudentId());
+
+    Map<Integer, Integer> externalMarksBySubject = new java.util.HashMap<>();
+
+    for (NcpMarks record : ncpRecords) {
+
+        int total = 0;
+        boolean hasSubmittedMarks = false;
+
+        if (Boolean.TRUE.equals(record.getNcp1Locked())
+                && record.getNcp1() != null) {
+            total += record.getNcp1();
+            hasSubmittedMarks = true;
         }
-        String[] loginParts = authentication.getName().split(":", 2);
-        if (loginParts.length != 2
-                || !"faculty".equalsIgnoreCase(loginParts[0])) {
-            return "redirect:/faculty-dashboard";
+
+        if (Boolean.TRUE.equals(record.getNcp2Locked())
+                && record.getNcp2() != null) {
+            total += record.getNcp2();
+            hasSubmittedMarks = true;
         }
-        Faculty faculty = facultyService
-                .getFacultyByEmail(loginParts[1])
-                .orElse(null);
-        if (faculty == null) {
-            return "redirect:/login";
+
+        if (Boolean.TRUE.equals(record.getNcp3Locked())
+                && record.getNcp3() != null) {
+            total += record.getNcp3();
+            hasSubmittedMarks = true;
         }
-        List<FacultySubject> assignments =
-                facultySubjectService.getAssignmentsByFaculty(
-                        faculty.getFacultyId());
-        model.addAttribute("faculty", faculty);
-        model.addAttribute("assignments", assignments);
-        return "faculty-dashboard";
+
+        if (hasSubmittedMarks) {
+            externalMarksBySubject.put(
+                    record.getSubject().getSubjectId(),
+                    total);
+        }
     }
+
+    model.addAttribute("student", student);
+    model.addAttribute("subjects", subjects);
+    model.addAttribute("externalMarksBySubject", externalMarksBySubject);
+
+    return "student-dashboard";
+}
+
+
+@GetMapping("/student-results")
+public String studentResults(
+        Authentication authentication,
+        @RequestParam(required = false) String ncp,
+        Model model) {
+
+    if (authentication == null || !authentication.isAuthenticated()) {
+        return "redirect:/login";
+    }
+
+    String[] loginParts = authentication.getName().split(":", 2);
+
+    if (loginParts.length != 2
+            || !"student".equalsIgnoreCase(loginParts[0])) {
+        return "redirect:/login";
+    }
+
+    Student student = studentService
+            .getStudentByRollNo(loginParts[1])
+            .orElse(null);
+
+    if (student == null) {
+        return "redirect:/login";
+    }
+
+    List<String> validNcpOptions = List.of("NCP1", "NCP2", "NCP3");
+
+    if (ncp == null || !validNcpOptions.contains(ncp.toUpperCase())) {
+        ncp = "NCP1";
+    } else {
+        ncp = ncp.toUpperCase();
+    }
+
+    List<Subject> subjects =
+            subjectService.getSubjectsByProgramAndSemester(
+                    student.getProgram().getProgramId(),
+                    student.getSemester());
+
+    List<NcpMarks> ncpRecords =
+            ncpMarksService.getNcpMarksByStudentId(
+                    student.getStudentId());
+
+    Map<Integer, NcpMarks> ncpMarksBySubject = new java.util.HashMap<>();
+
+    for (NcpMarks record : ncpRecords) {
+        ncpMarksBySubject.put(
+                record.getSubject().getSubjectId(),
+                record);
+    }
+
+    model.addAttribute("student", student);
+    model.addAttribute("subjects", subjects);
+    model.addAttribute("ncpMarksBySubject", ncpMarksBySubject);
+    model.addAttribute("selectedNcp", ncp);
+
+    return "student-results";
+}
+    
+@GetMapping("/admin-dashboard")
+public String adminDashboard(Model model) {
+
+    // Dynamic dashboard statistics
+    model.addAttribute("totalStudents",
+            studentService.getAllStudents().size());
+
+    model.addAttribute("totalFaculty",
+            facultyService.getAllFaculty().size());
+
+    model.addAttribute("totalSubjects",
+            subjectService.getAllSubjects().size());
+
+    // Faculty-subject-section assignments
+    List<FacultySubject> assignments =
+            facultySubjectService.getAllAssignments();
+
+    List<Map<String, Object>> dashboardRows =
+            new java.util.ArrayList<>();
+
+    for (FacultySubject assignment : assignments) {
+
+        Subject subject = assignment.getSubject();
+
+        List<Student> students =
+                studentService.getStudentsForSubjectSection(
+                        subject,
+                        assignment.getSection());
+
+        List<NcpMarks> records =
+                ncpMarksService.getNcpMarksBySubjectId(
+                        subject.getSubjectId());
+
+        // Keep only records belonging to this assignment's section
+        java.util.Set<Integer> studentIds = students.stream()
+                .map(Student::getStudentId)
+                .collect(Collectors.toSet());
+
+        List<NcpMarks> relevantRecords = records.stream()
+                .filter(record -> studentIds.contains(
+                        record.getStudent().getStudentId()))
+                .collect(Collectors.toList());
+
+        Map<String, Object> row = new java.util.HashMap<>();
+
+        row.put("facultyName", assignment.getFaculty().getName());
+        row.put("subjectName", subject.getSubjectName());
+        row.put("section", assignment.getSection());
+        row.put("studentCount", students.size());
+
+        row.put("ncp1Status",
+                getNcpApprovalStatus(relevantRecords, students.size(), "NCP1"));
+
+        row.put("ncp2Status",
+                getNcpApprovalStatus(relevantRecords, students.size(), "NCP2"));
+
+        row.put("ncp3Status",
+                getNcpApprovalStatus(relevantRecords, students.size(), "NCP3"));
+
+        dashboardRows.add(row);
+    }
+
+    model.addAttribute("dashboardRows", dashboardRows);
+
+    return "admin-dashboard";
+}
+
+/**
+ * Calculates the overall approval status for an NCP
+ * across all students in one faculty-subject-section assignment.
+ */
+private String getNcpApprovalStatus(
+        List<NcpMarks> records,
+        int totalStudents,
+        String ncp) {
+
+    if (totalStudents == 0) {
+        return "Not Submitted";
+    }
+
+    int submittedCount = 0;
+    int approvedCount = 0;
+
+    for (NcpMarks record : records) {
+
+        boolean locked = false;
+        boolean approved = false;
+        Integer score = null;
+
+        switch (ncp) {
+            case "NCP1":
+                locked = Boolean.TRUE.equals(record.getNcp1Locked());
+                approved = Boolean.TRUE.equals(record.getNcp1Approved());
+                score = record.getNcp1();
+                break;
+
+            case "NCP2":
+                locked = Boolean.TRUE.equals(record.getNcp2Locked());
+                approved = Boolean.TRUE.equals(record.getNcp2Approved());
+                score = record.getNcp2();
+                break;
+
+            case "NCP3":
+                locked = Boolean.TRUE.equals(record.getNcp3Locked());
+                approved = Boolean.TRUE.equals(record.getNcp3Approved());
+                score = record.getNcp3();
+                break;
+        }
+
+        if (locked && score != null) {
+            submittedCount++;
+
+            if (approved) {
+                approvedCount++;
+            }
+        }
+    }
+
+    if (approvedCount == totalStudents) {
+        return "Approved";
+    }
+
+    if (submittedCount > 0) {
+        return "Pending Approval";
+    }
+
+    return "Not Submitted";
+}
+
+    
+@GetMapping("/faculty-dashboard")
+public String facultyDashboard(
+        Authentication authentication,
+        Model model) {
+
+    // Authentication check
+    if (authentication == null) {
+        return "redirect:/login";
+    }
+
+    String[] loginParts = authentication.getName().split(":", 2);
+
+    if (loginParts.length != 2
+            || !"faculty".equalsIgnoreCase(loginParts[0])) {
+        return "redirect:/faculty-dashboard";
+    }
+
+    // Fetch faculty
+    Faculty faculty = facultyService
+            .getFacultyByEmail(loginParts[1])
+            .orElse(null);
+
+    if (faculty == null) {
+        return "redirect:/login";
+    }
+
+    // Fetch faculty assignments
+    List<FacultySubject> assignments =
+            facultySubjectService.getAssignmentsByFaculty(
+                    faculty.getFacultyId());
+
+    // Dashboard calculations
+    java.util.Set<Integer> uniqueStudentIds =
+            new java.util.HashSet<>();
+
+    int ncp1Pending = 0;
+    int ncp2Pending = 0;
+    int ncp3Pending = 0;
+
+    for (FacultySubject assignment : assignments) {
+
+        List<Student> students =
+                studentService.getStudentsForSubjectSection(
+                        assignment.getSubject(),
+                        assignment.getSection());
+
+        // Count unique students across all assigned sections
+        for (Student student : students) {
+            uniqueStudentIds.add(student.getStudentId());
+        }
+
+        // Fetch marks for the assigned subject
+        List<NcpMarks> records =
+                ncpMarksService.getNcpMarksBySubjectId(
+                        assignment.getSubject().getSubjectId());
+
+        // Keep only records belonging to students in this assignment
+        java.util.Set<Integer> assignedStudentIds = students.stream()
+                .map(Student::getStudentId)
+                .collect(Collectors.toSet());
+
+        Map<Integer, NcpMarks> recordsByStudent = records.stream()
+                .filter(record -> assignedStudentIds.contains(
+                        record.getStudent().getStudentId()))
+                .collect(Collectors.toMap(
+                        record -> record.getStudent().getStudentId(),
+                        record -> record,
+                        (first, second) -> first
+                ));
+
+        // Calculate pending submissions independently
+        for (Student student : students) {
+
+            NcpMarks record =
+                    recordsByStudent.get(student.getStudentId());
+
+            if (record == null
+                    || !Boolean.TRUE.equals(record.getNcp1Locked())) {
+                ncp1Pending++;
+            }
+
+            if (record == null
+                    || !Boolean.TRUE.equals(record.getNcp2Locked())) {
+                ncp2Pending++;
+            }
+
+            if (record == null
+                    || !Boolean.TRUE.equals(record.getNcp3Locked())) {
+                ncp3Pending++;
+            }
+        }
+    }
+
+    // Send dashboard values to Thymeleaf
+    model.addAttribute("faculty", faculty);
+    model.addAttribute("assignments", assignments);
+    model.addAttribute("totalStudents", uniqueStudentIds.size());
+
+    model.addAttribute("ncp1Pending", ncp1Pending);
+    model.addAttribute("ncp2Pending", ncp2Pending);
+    model.addAttribute("ncp3Pending", ncp3Pending);
+
+    return "faculty-dashboard";
+}
+
     @GetMapping("/marks-entry")
     public String marksEntry(
             Authentication authentication,
