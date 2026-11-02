@@ -176,7 +176,6 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Subject Name</th>
                         <th>Course Code</th>
                         <th>Credits</th>
@@ -195,7 +194,6 @@
                     </tr>
 
                     <tr th:each="subject : ${subjects}">
-                        <td th:text="${subject.subjectId}"></td>
 
                         <td>
                             <span class="display-value"
