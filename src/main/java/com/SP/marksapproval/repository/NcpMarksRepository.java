@@ -12,8 +12,10 @@ public interface NcpMarksRepository
 
     Optional<NcpMarks> findByStudent_StudentIdAndSubject_SubjectId(
             Integer studentId,
-            Integer subjectId);
+            Integer subjectId
+    );
 
     List<NcpMarks> findBySubject_SubjectId(Integer subjectId);
+
     List<NcpMarks> findByStudent_StudentId(Integer studentId);
 }

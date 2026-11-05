@@ -75,11 +75,7 @@
         </span>
 
         <span th:if="${param.error[0] == 'section'}">
-            Please select a valid section (maximum 20 characters).
-        </span>
-
-        <span th:if="${param.error[0] == 'sectionstudents'}">
-            No students match this subject's program, semester, and selected section.
+            Please enter a valid section (maximum 10 characters).
         </span>
 
         <span th:if="${param.error[0] == 'notfound'}">
@@ -90,7 +86,6 @@
                       and param.error[0] != 'subject'
                       and param.error[0] != 'duplicate'
                       and param.error[0] != 'section'
-                      and param.error[0] != 'sectionstudents'
                       and param.error[0] != 'notfound'}">
             Unable to process the request. Please try again.
         </span>
@@ -141,30 +136,32 @@
 
                             <option th:each="subject : ${subjects}"
                                     th:value="${subject.subjectId}"
-                                    th:text="|${subject.subjectName} - ${subject.courseCode} (Semester ${subject.semester}, ${subject.program.programName})|">
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="section" class="form-label">Section</label>
-
-                        <select id="section"
-                                name="section"
-                                class="form-select"
-                                required>
-                            <option value="">Select section</option>
-
-                            <option th:each="sectionOption : ${sectionOptions}"
-                                    th:value="${sectionOption}"
-                                    th:text="${sectionOption}">
+                                    th:text="|${subject.subjectName} - ${subject.courseCode} (Program: ${subject.program.programName}, Class Of: ${subject.classOf}, Semester: ${subject.semester})|">
                             </option>
                         </select>
 
                         <div class="form-text">
-                            Sections are drawn from existing student records.
-                            The selected section must contain students in this
-                            subject's program and semester.
+                            Subjects are specific to their program,
+                            graduating year, and semester.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="section" class="form-label">
+                            Section
+                        </label>
+
+                        <input type="text"
+                               id="section"
+                               name="section"
+                               class="form-control"
+                               placeholder="Enter section (e.g. A)"
+                               maxlength="10"
+                               required>
+
+                        <div class="form-text">
+                            Enter the section for this faculty assignment.
+                            Student records can be imported later.
                         </div>
                     </div>
 
@@ -194,6 +191,7 @@
                         <th>Subject</th>
                         <th>Course Code</th>
                         <th>Program</th>
+                        <th>Class Of</th>
                         <th>Semester</th>
                         <th>Section</th>
                         <th>Action</th>
@@ -203,7 +201,7 @@
                     <tbody>
 
                     <tr th:if="${#lists.isEmpty(assignments)}">
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="10" class="text-center text-muted py-4">
                             No faculty-subject assignments found.
                         </td>
                     </tr>
@@ -215,6 +213,7 @@
                         <td th:text="${assignment.subject.subjectName}"></td>
                         <td th:text="${assignment.subject.courseCode}"></td>
                         <td th:text="${assignment.subject.program.programName}"></td>
+                        <td th:text="${assignment.subject.classOf}"></td>
                         <td th:text="${assignment.subject.semester}"></td>
                         <td th:text="${assignment.section}"></td>
 

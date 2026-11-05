@@ -148,6 +148,12 @@
                     </div>
 
                     <div class="col-md-4">
+                        <label for="classOf" class="form-label">Class Of (Graduating Year)</label>
+                        <input id="classOf" type="number" name="classOf" class="form-control"
+                               min="2020" max="2100" placeholder="e.g. 2028" required>
+                    </div>
+
+                    <div class="col-md-4">
                         <label for="semester" class="form-label">
                             Semester
                         </label>
@@ -201,6 +207,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Program</th>
+                        <th>Class Of</th>
                         <th>Semester</th>
                         <th>Section</th>
                         <th>Actions</th>
@@ -210,7 +217,7 @@
                     <tbody>
 
                     <tr th:if="${#lists.isEmpty(students)}">
-                        <td colspan="7" class="text-center text-muted">
+                        <td colspan="8" class="text-center text-muted">
                             No students found.
                         </td>
                     </tr>
@@ -265,6 +272,14 @@
                                         th:selected="${program.programId == student.program.programId}">
                                 </option>
                             </select>
+                        </td>
+
+                        <!-- Class Of -->
+                        <td>
+                            <span class="display-value" th:text="${student.classOf}"></span>
+                            <input class="form-control edit-value d-none" type="number"
+                                   name="classOf" form="edit-form" min="2020" max="2100"
+                                   th:value="${student.classOf}" required>
                         </td>
 
                         <!-- Semester -->
@@ -410,7 +425,7 @@
 
         // Restore text inputs to their originally displayed values.
         row.querySelectorAll("input.edit-value").forEach(input => {
-            if (["name", "email", "section"].includes(input.name)) {
+            if (["name", "email", "section", "classOf"].includes(input.name)) {
                 const display = input.parentElement.querySelector(
                     ".display-value"
                 );

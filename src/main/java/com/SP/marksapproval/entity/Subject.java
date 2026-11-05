@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.entity;
 
 import jakarta.persistence.*;
@@ -22,6 +23,9 @@ public class Subject {
 
     @Column(name = "course_code", nullable = false)
     private String courseCode;
+
+    @Column(name = "class_of", nullable = false)
+    private Integer classOf;
 
     @ManyToOne
     @JoinColumn(name = "program_id", nullable = false)
@@ -62,12 +66,20 @@ public class Subject {
         this.semester = semester;
     }
 
-     public String getCourseCode() {
+    public String getCourseCode() {
         return courseCode;
     }
 
     public void setCourseCode(String courseCode) {
         this.courseCode = courseCode;
+    }
+
+    public Integer getClassOf() {
+        return classOf;
+    }
+
+    public void setClassOf(Integer classOf) {
+        this.classOf = classOf;
     }
 
     public Program getProgram() {

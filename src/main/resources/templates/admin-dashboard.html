@@ -42,7 +42,7 @@
         <h2>Admin Dashboard</h2>
 
         <p class="text-muted">
-            Manage students, faculty and subjects.
+            Manage programs, students, faculty and subjects.
         </p>
 
     </div>
@@ -51,6 +51,28 @@
     <!-- Dashboard Statistics -->
 
     <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">Academic Programs</h5>
+
+                    <p class="text-muted">
+                        Manage the programs used by students and subjects.
+                    </p>
+
+                    <a th:href="@{/admin/programs}" class="btn btn-primary">
+                        Manage Programs
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
 
         <div class="col-md-3">
 
@@ -184,8 +206,8 @@
                             <td>
 
                                 <span class="badge"
-                                      th:text="${row.ncp1Status == 'Pending Approval' || row.ncp1Status == 'Approved' ? 'Submitted' : row.ncp1Status}"
-                                      th:classappend="${row.ncp1Status == 'Pending Approval' || row.ncp1Status == 'Approved' ? 'bg-success' : 'bg-secondary'}">
+                                      th:text="${row.ncp1Status}"
+                                      th:classappend="${row.ncp1Status == 'Submitted' ? 'bg-success' : (row.ncp1Status == 'Partially Submitted' ? 'bg-warning text-dark' : 'bg-secondary')}">
                                     Not Submitted
                                 </span>
 
@@ -197,8 +219,8 @@
                             <td>
 
                                 <span class="badge"
-                                      th:text="${row.ncp2Status == 'Pending Approval' || row.ncp2Status == 'Approved' ? 'Submitted' : row.ncp2Status}"
-                                      th:classappend="${row.ncp2Status == 'Pending Approval' || row.ncp2Status == 'Approved' ? 'bg-success' : 'bg-secondary'}">
+                                      th:text="${row.ncp2Status}"
+                                      th:classappend="${row.ncp2Status == 'Submitted' ? 'bg-success' : (row.ncp2Status == 'Partially Submitted' ? 'bg-warning text-dark' : 'bg-secondary')}">
                                     Not Submitted
                                 </span>
 
@@ -210,8 +232,8 @@
                             <td>
 
                                 <span class="badge"
-                                      th:text="${row.ncp3Status == 'Pending Approval' || row.ncp3Status == 'Approved' ? 'Submitted' : row.ncp3Status}"
-                                      th:classappend="${row.ncp3Status == 'Pending Approval' || row.ncp3Status == 'Approved' ? 'bg-success' : 'bg-secondary'}">
+                                      th:text="${row.ncp3Status}"
+                                      th:classappend="${row.ncp3Status == 'Submitted' ? 'bg-success' : (row.ncp3Status == 'Partially Submitted' ? 'bg-warning text-dark' : 'bg-secondary')}">
                                     Not Submitted
                                 </span>
 

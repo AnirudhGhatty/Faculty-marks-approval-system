@@ -44,6 +44,45 @@ public class FacultySubjectService {
                 .findBySubject_SubjectId(subjectId);
     }
 
+    public List<FacultySubject> getAssignmentsByFacultyAndSubject(
+            Integer facultyId,
+            Integer subjectId) {
+
+        return facultySubjectRepository
+                .findByFaculty_FacultyIdAndSubject_SubjectId(
+                        facultyId, subjectId);
+    }
+
+    public List<FacultySubject> getAssignmentsByFacultyAndProgram(
+            Integer facultyId,
+            Integer programId) {
+
+        return facultySubjectRepository
+                .findByFaculty_FacultyIdAndSubject_Program_ProgramId(
+                        facultyId, programId);
+    }
+
+    public List<FacultySubject> getAssignmentsByFacultyProgramAndSemester(
+            Integer facultyId,
+            Integer programId,
+            Integer semester) {
+
+        return facultySubjectRepository
+                .findByFaculty_FacultyIdAndSubject_Program_ProgramIdAndSubject_Semester(
+                        facultyId, programId, semester);
+    }
+
+    public List<FacultySubject> getAssignmentsByFacultyProgramClassOfAndSemester(
+            Integer facultyId,
+            Integer programId,
+            Integer classOf,
+            Integer semester) {
+
+        return facultySubjectRepository
+                .findByFaculty_FacultyIdAndSubject_Program_ProgramIdAndSubject_ClassOfAndSubject_Semester(
+                        facultyId, programId, classOf, semester);
+    }
+
     public boolean assignmentExists(
             Integer facultyId,
             Integer subjectId,
@@ -51,9 +90,6 @@ public class FacultySubjectService {
 
         return facultySubjectRepository
                 .existsByFaculty_FacultyIdAndSubject_SubjectIdAndSectionIgnoreCase(
-                        facultyId,
-                        subjectId,
-                        section
-                );
+                        facultyId, subjectId, section);
     }
 }

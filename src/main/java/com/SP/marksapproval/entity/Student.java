@@ -23,6 +23,9 @@ public class Student {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "class_of", nullable = false)
+    private Integer classOf;
+
     @Column(nullable = false)
     private Integer semester;
 
@@ -74,6 +77,14 @@ public class Student {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Integer getClassOf() {
+        return classOf;
+    }
+
+    public void setClassOf(Integer classOf) {
+        this.classOf = classOf;
     }
 
     public Integer getSemester() {

@@ -17,6 +17,9 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/ncp-marks")
@@ -39,15 +42,17 @@ public class NcpMarksController {
         this.studentService = studentService;
     }
 
+    /**
+     * Bulk submission of one NCP for an entire assigned roster.
+     */
     @PostMapping("/submit")
     public ResponseEntity<Map<String, String>> submitNcpMarks(
             @RequestParam Integer assignmentId,
-            @RequestParam Integer studentId,
             @RequestParam String ncp,
-            @RequestParam Integer score,
+            @RequestParam Map<String, String> requestParams,
             Principal principal) {
 
-        // Verify that the request comes from an authenticated faculty account.
+        // 1. Verify faculty authentication.
         if (principal == null
                 || principal.getName() == null
                 || !principal.getName().startsWith("faculty:")) {
@@ -57,7 +62,8 @@ public class NcpMarksController {
                     "Please log in with a faculty account.");
         }
 
-        String email = principal.getName().substring("faculty:".length());
+        String email = principal.getName()
+                .substring("faculty:".length());
 
         Optional<Faculty> facultyOptional =
                 facultyService.getFacultyByEmail(email);
@@ -70,7 +76,7 @@ public class NcpMarksController {
 
         Faculty faculty = facultyOptional.get();
 
-        // Find the requested assignment.
+        // 2. Verify assignment.
         Optional<FacultySubject> assignmentOptional =
                 facultySubjectService.getAssignmentById(assignmentId);
 
@@ -82,7 +88,6 @@ public class NcpMarksController {
 
         FacultySubject assignment = assignmentOptional.get();
 
-        // Verify that this assignment belongs to the logged-in faculty member.
         if (assignment.getFaculty() == null
                 || !assignment.getFaculty().getFacultyId()
                         .equals(faculty.getFacultyId())) {
@@ -92,39 +97,90 @@ public class NcpMarksController {
                     "You are not authorized to submit marks for this assignment.");
         }
 
-        // Confirm that the student belongs to this assignment's roster.
+        // 3. Fetch the exact cohort and section roster.
+        // Class Of now belongs to Subject, not FacultySubject.
         List<Student> roster =
                 studentService.getStudentsForSubjectSection(
                         assignment.getSubject(),
+                        assignment.getSubject().getClassOf(),
                         assignment.getSection());
 
-        boolean studentBelongsToAssignment = roster.stream()
-                .anyMatch(student ->
-                        student.getStudentId().equals(studentId));
-
-        if (!studentBelongsToAssignment) {
+        if (roster.isEmpty()) {
             return error(
-                    HttpStatus.FORBIDDEN,
-                    "This student does not belong to the assigned subject and section.");
+                    HttpStatus.BAD_REQUEST,
+                    "There are no students in this assignment's roster.");
         }
 
-        // Validate the score and lock only the selected NCP.
+        // 4. Extract submitted student scores.
+        Map<Integer, Integer> scores = new HashMap<>();
+
+        Set<Integer> rosterIds = roster.stream()
+                .map(Student::getStudentId)
+                .collect(Collectors.toSet());
+
+        for (Map.Entry<String, String> entry
+                : requestParams.entrySet()) {
+
+            String key = entry.getKey();
+
+            if (!key.startsWith("scores[")) {
+                continue;
+            }
+
+            try {
+                int closingBracket = key.indexOf(']');
+
+                if (closingBracket < 0) {
+                    return error(
+                            HttpStatus.BAD_REQUEST,
+                            "Invalid student score field.");
+                }
+
+                Integer studentId = Integer.parseInt(
+                        key.substring(7, closingBracket));
+
+                if (!rosterIds.contains(studentId)) {
+                    return error(
+                            HttpStatus.FORBIDDEN,
+                            "A submitted student does not belong to this assignment.");
+                }
+
+                Integer score = Integer.valueOf(entry.getValue());
+
+                if (scores.put(studentId, score) != null) {
+                    return error(
+                            HttpStatus.BAD_REQUEST,
+                            "Duplicate score submitted for a student.");
+                }
+
+            } catch (NumberFormatException ex) {
+                return error(
+                        HttpStatus.BAD_REQUEST,
+                        "Student IDs and marks must be valid whole numbers.");
+            }
+        }
+
+        // 5. Require a score for every student.
+        if (scores.size() != roster.size()) {
+            return error(
+                    HttpStatus.BAD_REQUEST,
+                    "Please enter marks for every student before submitting.");
+        }
+
+        // 6. Submit the entire batch.
         try {
-            ncpMarksService.submitNcpMarks(
-                    roster.stream()
-                            .filter(student ->
-                                    student.getStudentId().equals(studentId))
-                            .findFirst()
-                            .orElseThrow(),
+            ncpMarksService.submitBulkNcpMarks(
+                    roster,
                     assignment.getSubject(),
                     ncp,
-                    score);
+                    scores);
 
             return ResponseEntity.ok(
                     Map.of(
                             "message",
                             ncp.toUpperCase()
-                                    + " marks submitted and locked successfully."));
+                                    + " marks submitted and locked successfully for "
+                                    + roster.size() + " students."));
 
         } catch (IllegalArgumentException | IllegalStateException ex) {
             return error(HttpStatus.BAD_REQUEST, ex.getMessage());

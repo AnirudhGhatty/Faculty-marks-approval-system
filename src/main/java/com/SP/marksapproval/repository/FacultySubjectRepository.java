@@ -1,3 +1,4 @@
+
 package com.SP.marksapproval.repository;
 
 import com.SP.marksapproval.entity.FacultySubject;
@@ -12,14 +13,34 @@ public interface FacultySubjectRepository
 
     List<FacultySubject> findBySubject_SubjectId(Integer subjectId);
 
+    List<FacultySubject> findByFaculty_FacultyIdAndSubject_SubjectId(
+            Integer facultyId,
+            Integer subjectId
+    );
+
+    List<FacultySubject> findByFaculty_FacultyIdAndSubject_Program_ProgramId(
+            Integer facultyId,
+            Integer programId
+    );
+
+    List<FacultySubject>
+    findByFaculty_FacultyIdAndSubject_Program_ProgramIdAndSubject_Semester(
+            Integer facultyId,
+            Integer programId,
+            Integer semester
+    );
+
+    List<FacultySubject>
+    findByFaculty_FacultyIdAndSubject_Program_ProgramIdAndSubject_ClassOfAndSubject_Semester(
+            Integer facultyId,
+            Integer programId,
+            Integer classOf,
+            Integer semester
+    );
+
     boolean existsByFaculty_FacultyIdAndSubject_SubjectIdAndSectionIgnoreCase(
             Integer facultyId,
             Integer subjectId,
             String section
-    );
-
-    List<FacultySubject> findByFaculty_FacultyIdAndSubject_SubjectId(
-            Integer facultyId,
-            Integer subjectId
     );
 }

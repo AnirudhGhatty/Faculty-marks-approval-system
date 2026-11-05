@@ -6,12 +6,10 @@ import jakarta.persistence.*;
 @Entity
 @Table(
     name = "faculty_subject",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_faculty_subject_section",
-            columnNames = {"faculty_id", "subject_id", "section"}
-        )
-    }
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_faculty_subject_section",
+        columnNames = {"faculty_id", "subject_id", "section"}
+    )
 )
 public class FacultySubject {
 
@@ -28,7 +26,7 @@ public class FacultySubject {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
-    @Column(name = "section", nullable = false, length = 20)
+    @Column(name = "section", nullable = false, length = 10)
     private String section;
 
     public FacultySubject() {

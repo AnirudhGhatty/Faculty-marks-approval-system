@@ -21,6 +21,10 @@ public class SubjectService {
         return subjectRepository.findAll();
     }
 
+    public long countByProgramId(Integer programId) {
+        return subjectRepository.countByProgram_ProgramId(programId);
+    }
+
     public Optional<Subject> getSubjectById(Integer id) {
         return subjectRepository.findById(id);
     }
@@ -36,7 +40,18 @@ public class SubjectService {
     public List<Subject> getSubjectsByProgramAndSemester(
             Integer programId,
             Integer semester) {
+
         return subjectRepository
                 .findByProgram_ProgramIdAndSemester(programId, semester);
+    }
+
+    public List<Subject> getSubjectsByProgramClassOfAndSemester(
+            Integer programId,
+            Integer classOf,
+            Integer semester) {
+
+        return subjectRepository
+                .findByProgram_ProgramIdAndClassOfAndSemester(
+                        programId, classOf, semester);
     }
 }
