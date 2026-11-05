@@ -17,21 +17,24 @@ public class Student {
     @Column(name = "roll_no", nullable = false, unique = true)
     private String rollNo;
 
-    @Column(nullable = false)
-    private String name;
-
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false)
     private Integer semester;
 
     @Column(nullable = false)
     private String section;
-    
+
     @ManyToOne
     @JoinColumn(name = "program_id", nullable = false)
     private Program program;
+
+    @Column(name = "class_of", nullable = false)
+    private Integer classOf;
 
     public Student() {
     }
@@ -93,10 +96,18 @@ public class Student {
     }
 
     public Program getProgram() {
-    return program;
-}
+        return program;
+    }
 
     public void setProgram(Program program) {
         this.program = program;
-}
+    }
+
+    public Integer getClassOf() {
+        return classOf;
+    }
+
+    public void setClassOf(Integer classOf) {
+        this.classOf = classOf;
+    }
 }

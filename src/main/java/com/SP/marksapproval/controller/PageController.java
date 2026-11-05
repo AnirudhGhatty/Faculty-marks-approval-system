@@ -1,7 +1,11 @@
+
 package com.SP.marksapproval.controller;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import com.SP.marksapproval.entity.NcpMarks;
 import com.SP.marksapproval.service.NcpMarksService;
 import org.springframework.security.core.Authentication;
@@ -506,12 +510,16 @@ public String facultyDashboard(
             @RequestParam String password,
             @RequestParam Integer programId,
             @RequestParam Integer semester,
-            @RequestParam String section) {
+            @RequestParam String section,
+            @RequestParam Integer classOf) {
+
         Program program = programRepository.findById(programId)
                 .orElse(null);
+
         if (program == null) {
             return "redirect:/admin/students?error=program";
         }
+
         Student student = new Student();
         student.setRollNo(rollNo);
         student.setName(name);
@@ -520,19 +528,28 @@ public String facultyDashboard(
         student.setProgram(program);
         student.setSemester(semester);
         student.setSection(section);
+        student.setClassOf(classOf);
+
         studentService.saveStudent(student);
+
         return "redirect:/admin/students?success";
     }
+
     @PostMapping("/admin/students/delete/{rollNo}")
     public String deleteStudent(@PathVariable String rollNo) {
+
         Student student = studentService.getStudentByRollNo(rollNo)
                 .orElse(null);
+
         if (student == null) {
             return "redirect:/admin/students?error=notfound";
         }
+
         studentService.deleteStudent(student.getStudentId());
+
         return "redirect:/admin/students?deleted";
     }
+
     @PostMapping("/admin/students/update/{rollNo}")
     public String updateStudent(
             @PathVariable String rollNo,
@@ -541,34 +558,48 @@ public String facultyDashboard(
             @RequestParam(required = false) String password,
             @RequestParam Integer programId,
             @RequestParam Integer semester,
-            @RequestParam String section) {
+            @RequestParam String section,
+            @RequestParam Integer classOf) {
+
         Student student = studentService.getStudentByRollNo(rollNo)
                 .orElse(null);
+
         if (student == null) {
             return "redirect:/admin/students?error=notfound";
         }
+
         Program program = programRepository.findById(programId)
                 .orElse(null);
+
         if (program == null) {
             return "redirect:/admin/students?error=program";
         }
+
         student.setName(name);
         student.setEmail(email);
         student.setProgram(program);
         student.setSemester(semester);
         student.setSection(section);
+        student.setClassOf(classOf);
+
         if (password != null && !password.isBlank()) {
             student.setPassword(password);
         }
+
         studentService.saveStudent(student);
+
         return "redirect:/admin/students?updated";
     }
+
     // =========================
     // FACULTY MANAGEMENT
     // =========================
+
     @GetMapping("/admin/faculty")
     public String adminFaculty(Model model) {
+
         List<Faculty> facultyMembers = facultyService.getAllFaculty();
+
         Map<Integer, List<FacultySubject>> assignmentsByFaculty =
                 facultySubjectService.getAllAssignments()
                         .stream()
@@ -576,61 +607,81 @@ public String facultyDashboard(
                                 assignment ->
                                         assignment.getFaculty().getFacultyId()
                         ));
+
         model.addAttribute("facultyMembers", facultyMembers);
         model.addAttribute("subjects", subjectService.getAllSubjects());
         model.addAttribute("assignmentsByFaculty", assignmentsByFaculty);
+
         return "admin-faculty";
     }
+
     @PostMapping("/admin/faculty")
     public String addFaculty(
             @RequestParam String name,
             @RequestParam String email,
             @RequestParam String department,
             @RequestParam String password) {
+
         if (facultyService.getFacultyByEmail(email).isPresent()) {
             return "redirect:/admin/faculty?error=email";
         }
+
         Faculty faculty = new Faculty();
         faculty.setName(name);
         faculty.setEmail(email);
         faculty.setDepartment(department);
         faculty.setPassword(password);
+
         facultyService.saveFaculty(faculty);
+
         return "redirect:/admin/faculty?success";
     }
+
     @PostMapping("/admin/faculty/delete/{id}")
     public String deleteFaculty(@PathVariable Integer id) {
+
         Faculty faculty = facultyService.getFacultyById(id)
                 .orElse(null);
+
         if (faculty == null) {
             return "redirect:/admin/faculty?error=notfound";
         }
+
         facultyService.deleteFaculty(id);
+
         return "redirect:/admin/faculty?deleted";
     }
+
     @PostMapping("/admin/faculty/update/{id}")
     public String updateFaculty(
             @PathVariable Integer id,
             @RequestParam String name,
             @RequestParam String department) {
+
         Faculty faculty = facultyService.getFacultyById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Faculty not found with ID: " + id));
+
         faculty.setName(name);
         faculty.setDepartment(department);
+
         facultyService.saveFaculty(faculty);
+
         return "redirect:/admin/faculty?updated";
     }
+
     // =========================
     // SUBJECT MANAGEMENT
     // =========================
+
     @GetMapping("/admin/subjects")
     public String adminSubjects(Model model) {
         model.addAttribute("subjects", subjectService.getAllSubjects());
         model.addAttribute("programs", programRepository.findAll());
         return "admin-subjects";
     }
+
     @PostMapping("/admin/subjects")
     public String addSubject(
             @RequestParam String subjectName,
