@@ -175,6 +175,18 @@
                                required>
                     </div>
 
+                    <div class="col-md-4">
+                        <label for="classOf" class="form-label">
+                            Class Of
+                        </label>
+                        <input id="classOf"
+                               type="number"
+                               name="classOf"
+                               class="form-control"
+                               placeholder="e.g. 2026"
+                               required>
+                    </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-primary mt-4">
@@ -203,6 +215,7 @@
                         <th>Program</th>
                         <th>Semester</th>
                         <th>Section</th>
+                        <th>Class Of</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -210,7 +223,7 @@
                     <tbody>
 
                     <tr th:if="${#lists.isEmpty(students)}">
-                        <td colspan="7" class="text-center text-muted">
+                        <td colspan="8" class="text-center text-muted">
                             No students found.
                         </td>
                     </tr>
@@ -231,7 +244,7 @@
                             <input class="form-control edit-value d-none"
                                    type="text"
                                    name="name"
-                                   form="edit-form"
+                                   th:attr="form=|edit-form-${studentStat.index}|"
                                    th:value="${student.name}"
                                    required>
                         </td>
@@ -244,7 +257,7 @@
                             <input class="form-control edit-value d-none"
                                    type="email"
                                    name="email"
-                                   form="edit-form"
+                                   th:attr="form=|edit-form-${studentStat.index}|"
                                    th:value="${student.email}"
                                    required>
                         </td>
@@ -256,7 +269,7 @@
 
                             <select class="form-select edit-value d-none"
                                     name="programId"
-                                    form="edit-form"
+                                    th:attr="form=|edit-form-${studentStat.index}|"
                                     required>
 
                                 <option th:each="program : ${programs}"
@@ -274,7 +287,7 @@
 
                             <select class="form-select edit-value d-none"
                                     name="semester"
-                                    form="edit-form"
+                                    th:attr="form=|edit-form-${studentStat.index}|"
                                     required>
 
                                 <option th:each="sem : ${#numbers.sequence(1, 8)}"
@@ -293,8 +306,21 @@
                             <input class="form-control edit-value d-none"
                                    type="text"
                                    name="section"
-                                   form="edit-form"
+                                   th:attr="form=|edit-form-${studentStat.index}|"
                                    th:value="${student.section}"
+                                   required>
+                        </td>
+
+                        <!-- Class Of -->
+                        <td>
+                            <span class="display-value"
+                                  th:text="${student.classOf}"></span>
+
+                            <input class="form-control edit-value d-none"
+                                   type="number"
+                                   name="classOf"
+                                   th:attr="form=|edit-form-${studentStat.index}|"
+                                   th:value="${student.classOf}"
                                    required>
                         </td>
 
@@ -326,6 +352,7 @@
 
                                 <!-- Save -->
                                 <button type="submit"
+                                        th:attr="form=|edit-form-${studentStat.index}|"
                                         class="btn btn-sm btn-success edit-value d-none">
                                     Save
                                 </button>
@@ -410,7 +437,7 @@
 
         // Restore text inputs to their originally displayed values.
         row.querySelectorAll("input.edit-value").forEach(input => {
-            if (["name", "email", "section"].includes(input.name)) {
+            if (["name", "email", "section", "classOf"].includes(input.name)) {
                 const display = input.parentElement.querySelector(
                     ".display-value"
                 );
