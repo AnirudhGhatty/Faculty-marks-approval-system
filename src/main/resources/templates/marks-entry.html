@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -305,6 +304,7 @@
               th:if="${selectedNcp != null and students != null
                   and not #lists.isEmpty(students)}"
               th:action="@{/ncp-marks/submit}"
+              th:attr="data-draft-action=@{/ncp-marks/save-draft}"
               method="post">
 
             <input type="hidden"
@@ -397,11 +397,19 @@
                     Submission locks this NCP for the entire roster.
                 </p>
 
-                <button type="submit"
-                        id="submitAllButton"
-                        class="btn btn-success btn-lg">
-                    Submit All &amp; Lock
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button"
+                            id="saveDraftButton"
+                            class="btn btn-outline-primary">
+                        Save Draft
+                    </button>
+
+                    <button type="submit"
+                            id="submitAllButton"
+                            class="btn btn-success">
+                        Submit All &amp; Lock
+                    </button>
+                </div>
             </div>
 
         </form>
@@ -479,7 +487,75 @@ const bulkForm = document.getElementById("bulkMarksForm");
 
 if (bulkForm) {
     const submitButton = document.getElementById("submitAllButton");
+    const saveDraftButton = document.getElementById("saveDraftButton");
     const messageBox = document.getElementById("bulkMessage");
+
+    // Save an incomplete draft without triggering final-submission validation.
+    saveDraftButton.addEventListener("click", async function () {
+
+        messageBox.className = "alert d-none";
+        messageBox.textContent = "";
+
+        const unlockedInputs = Array.from(
+            bulkForm.querySelectorAll('input[name^="scores["]:not(:disabled)')
+        );
+
+        if (unlockedInputs.length === 0) {
+            showMessage("There are no unlocked marks to save.", "warning");
+            return;
+        }
+
+        saveDraftButton.disabled = true;
+        submitButton.disabled = true;
+        saveDraftButton.textContent = "Saving Draft...";
+
+        try {
+            const formData = new FormData(bulkForm);
+
+            const response = await fetch(bulkForm.dataset.draftAction, {
+                method: "POST",
+                body: new URLSearchParams(formData),
+                headers: {
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin"
+            });
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error(
+                    "The server returned an unexpected response. Please reload the page."
+                );
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || result.message || "Unable to save draft."
+                );
+            }
+
+            showMessage(
+                result.message || "Draft saved successfully!",
+                "success"
+            );
+
+        } catch (error) {
+
+            showMessage(
+                error.message || "Something went wrong while saving the draft.",
+                "danger"
+            );
+
+        } finally {
+
+            saveDraftButton.disabled = false;
+            submitButton.disabled = false;
+            saveDraftButton.textContent = "Save Draft";
+        }
+    });
 
     bulkForm.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -609,7 +685,7 @@ if (bulkForm) {
 
     function submitAfterReset(fields) {
         fields.forEach(field => { field.value = ""; });
-        form.requestSubmit();
+        form.submit();
     }
 
     program.addEventListener("change", () =>

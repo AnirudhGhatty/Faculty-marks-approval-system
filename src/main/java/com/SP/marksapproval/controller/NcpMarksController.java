@@ -42,6 +42,152 @@ public class NcpMarksController {
         this.studentService = studentService;
     }
 
+    
+    /**
+     * Saves an incomplete NCP marks draft without locking it.
+     */
+    @PostMapping("/save-draft")
+    public ResponseEntity<Map<String, String>> saveNcpMarksDraft(
+            @RequestParam Integer assignmentId,
+            @RequestParam String ncp,
+            @RequestParam Map<String, String> requestParams,
+            Principal principal) {
+
+        // 1. Verify faculty authentication.
+        if (principal == null
+                || principal.getName() == null
+                || !principal.getName().startsWith("faculty:")) {
+
+            return error(
+                    HttpStatus.UNAUTHORIZED,
+                    "Please log in with a faculty account.");
+        }
+
+        String email = principal.getName()
+                .substring("faculty:".length());
+
+        Optional<Faculty> facultyOptional =
+                facultyService.getFacultyByEmail(email);
+
+        if (facultyOptional.isEmpty()) {
+            return error(
+                    HttpStatus.FORBIDDEN,
+                    "Faculty account could not be verified.");
+        }
+
+        Faculty faculty = facultyOptional.get();
+
+        // 2. Verify assignment ownership.
+        Optional<FacultySubject> assignmentOptional =
+                facultySubjectService.getAssignmentById(assignmentId);
+
+        if (assignmentOptional.isEmpty()) {
+            return error(
+                    HttpStatus.NOT_FOUND,
+                    "The requested assignment does not exist.");
+        }
+
+        FacultySubject assignment = assignmentOptional.get();
+
+        if (assignment.getFaculty() == null
+                || !assignment.getFaculty().getFacultyId()
+                        .equals(faculty.getFacultyId())) {
+
+            return error(
+                    HttpStatus.FORBIDDEN,
+                    "You are not authorized to save marks for this assignment.");
+        }
+
+        // 3. Fetch the exact cohort and section roster.
+        List<Student> roster =
+                studentService.getStudentsForSubjectSection(
+                        assignment.getSubject(),
+                        assignment.getSubject().getClassOf(),
+                        assignment.getSection());
+
+        if (roster.isEmpty()) {
+            return error(
+                    HttpStatus.BAD_REQUEST,
+                    "There are no students in this assignment's roster.");
+        }
+
+        // 4. Extract scores. Blank fields are allowed in drafts.
+        Map<Integer, Integer> scores = new HashMap<>();
+
+        Set<Integer> rosterIds = roster.stream()
+                .map(Student::getStudentId)
+                .collect(Collectors.toSet());
+
+        for (Map.Entry<String, String> entry
+                : requestParams.entrySet()) {
+
+            String key = entry.getKey();
+
+            if (!key.startsWith("scores[")) {
+                continue;
+            }
+
+            try {
+                int closingBracket = key.indexOf(']');
+
+                if (closingBracket < 0) {
+                    return error(
+                            HttpStatus.BAD_REQUEST,
+                            "Invalid student score field.");
+                }
+
+                Integer studentId = Integer.parseInt(
+                        key.substring(7, closingBracket));
+
+                if (!rosterIds.contains(studentId)) {
+                    return error(
+                            HttpStatus.FORBIDDEN,
+                            "A submitted student does not belong to this assignment.");
+                }
+
+                if (scores.containsKey(studentId)) {
+                    return error(
+                            HttpStatus.BAD_REQUEST,
+                            "Duplicate score submitted for a student.");
+                }
+
+                String rawScore = entry.getValue();
+
+                // Blank means no mark. It does not invalidate a draft.
+                Integer score = (rawScore == null
+                        || rawScore.trim().isEmpty())
+                        ? null
+                        : Integer.valueOf(rawScore.trim());
+
+                scores.put(studentId, score);
+
+            } catch (NumberFormatException ex) {
+                return error(
+                        HttpStatus.BAD_REQUEST,
+                        "Student IDs and marks must be valid whole numbers.");
+            }
+        }
+
+        // 5. Save the draft without locking the assessment.
+        try {
+            ncpMarksService.saveDraftBulkNcpMarks(
+                    roster,
+                    assignment.getSubject(),
+                    ncp,
+                    scores);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            ncp.toUpperCase()
+                                    + " draft saved successfully. You can continue editing it later."));
+
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return error(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
+    }
+
+
     /**
      * Bulk submission of one NCP for an entire assigned roster.
      */

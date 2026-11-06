@@ -116,6 +116,151 @@ public class NcpMarksService {
         }
     }
 
+        /**
+     * Saves an incomplete NCP marks draft without locking it.
+     */
+    @Transactional
+    public void saveDraftBulkNcpMarks(
+            List<Student> students,
+            Subject subject,
+            String ncp,
+            Map<Integer, Integer> scores) {
+
+        if (students == null || students.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "There are no students in this roster.");
+        }
+
+        if (subject == null || subject.getSubjectId() == null) {
+            throw new IllegalArgumentException(
+                    "A valid subject is required.");
+        }
+
+        if (scores == null) {
+            throw new IllegalArgumentException(
+                    "Student marks are required.");
+        }
+
+        String selectedNcp = ncp == null
+                ? null
+                : ncp.trim().toUpperCase();
+
+        int maximumMarks = getMaximumMarks(selectedNcp);
+
+        // Build a map of the students belonging to this roster.
+        Map<Integer, Student> rosterStudents = new HashMap<>();
+
+        for (Student student : students) {
+
+            if (student == null || student.getStudentId() == null) {
+                throw new IllegalArgumentException(
+                        "The roster contains an invalid student.");
+            }
+
+            if (rosterStudents.put(
+                    student.getStudentId(), student) != null) {
+                throw new IllegalArgumentException(
+                        "The roster contains duplicate students.");
+            }
+        }
+
+        // Reject scores belonging to students outside this roster.
+        if (!rosterStudents.keySet().containsAll(scores.keySet())) {
+            throw new IllegalArgumentException(
+                    "A submitted student does not belong to this roster.");
+        }
+
+        // Validate all non-empty marks before modifying any records.
+        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+
+            Integer score = entry.getValue();
+
+            if (score != null
+                    && (score < 0 || score > maximumMarks)) {
+                throw new IllegalArgumentException(
+                        "Invalid marks for student "
+                                + rosterStudents.get(entry.getKey()).getRollNo()
+                                + ". Enter a whole number between 0 and "
+                                + maximumMarks + ".");
+            }
+        }
+
+        Map<Integer, NcpMarks> recordsToSave = new HashMap<>();
+
+        // Retrieve existing records and protect locked assessments.
+        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+
+            Integer studentId = entry.getKey();
+            Student student = rosterStudents.get(studentId);
+            Integer score = entry.getValue();
+
+            Optional<NcpMarks> existing =
+                    ncpMarksRepository
+                            .findByStudent_StudentIdAndSubject_SubjectId(
+                                    studentId,
+                                    subject.getSubjectId());
+
+            // No need to create an empty database record.
+            if (existing.isEmpty() && score == null) {
+                continue;
+            }
+
+            NcpMarks record;
+
+            if (existing.isPresent()) {
+
+                record = existing.get();
+
+                if (isLocked(record, selectedNcp)) {
+                    throw new IllegalStateException(
+                            selectedNcp
+                                    + " is already locked for student "
+                                    + student.getRollNo() + ".");
+                }
+
+            } else {
+
+                record = new NcpMarks();
+                record.setStudent(student);
+                record.setSubject(subject);
+            }
+
+            recordsToSave.put(studentId, record);
+        }
+
+        // Update only the selected NCP. Never change its lock flag.
+        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+
+            NcpMarks record = recordsToSave.get(entry.getKey());
+
+            if (record == null) {
+                continue;
+            }
+
+            Integer score = entry.getValue();
+
+            switch (selectedNcp) {
+
+                case "NCP1":
+                    record.setNcp1(score);
+                    break;
+
+                case "NCP2":
+                    record.setNcp2(score);
+                    break;
+
+                case "NCP3":
+                    record.setNcp3(score);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Invalid NCP.");
+            }
+        }
+
+        ncpMarksRepository.saveAll(recordsToSave.values());
+    }
+
     /**
      * Submits marks for an entire subject roster.
      *
