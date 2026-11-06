@@ -2,6 +2,7 @@
 package com.SP.marksapproval.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(
@@ -28,14 +29,14 @@ public class NcpMarks {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
-    @Column(name = "ncp1")
-    private Integer ncp1;
+    @Column(name = "ncp1", precision = 5, scale = 2)
+    private BigDecimal ncp1;
 
-    @Column(name = "ncp2")
-    private Integer ncp2;
+    @Column(name = "ncp2", precision = 5, scale = 2)
+    private BigDecimal ncp2;
 
-    @Column(name = "ncp3")
-    private Integer ncp3;
+    @Column(name = "ncp3", precision = 5, scale = 2)
+    private BigDecimal ncp3;
 
     @Column(name = "ncp1_locked", nullable = false)
     private Boolean ncp1Locked = false;
@@ -73,27 +74,27 @@ public class NcpMarks {
         this.subject = subject;
     }
 
-    public Integer getNcp1() {
+    public BigDecimal getNcp1() {
         return ncp1;
     }
 
-    public void setNcp1(Integer ncp1) {
+    public void setNcp1(BigDecimal ncp1) {
         this.ncp1 = ncp1;
     }
 
-    public Integer getNcp2() {
+    public BigDecimal getNcp2() {
         return ncp2;
     }
 
-    public void setNcp2(Integer ncp2) {
+    public void setNcp2(BigDecimal ncp2) {
         this.ncp2 = ncp2;
     }
 
-    public Integer getNcp3() {
+    public BigDecimal getNcp3() {
         return ncp3;
     }
 
-    public void setNcp3(Integer ncp3) {
+    public void setNcp3(BigDecimal ncp3) {
         this.ncp3 = ncp3;
     }
 

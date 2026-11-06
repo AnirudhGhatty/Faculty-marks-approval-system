@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -304,7 +305,8 @@
               th:if="${selectedNcp != null and students != null
                   and not #lists.isEmpty(students)}"
               th:action="@{/ncp-marks/submit}"
-              th:attr="data-draft-action=@{/ncp-marks/save-draft}"
+              th:attr="data-draft-action=@{/ncp-marks/save-draft},
+                       data-upload-action=@{/ncp-marks/upload-excel}"
               method="post">
 
             <input type="hidden"
@@ -364,7 +366,7 @@
                                    th:name="|scores[${student.studentId}]|"
                                    min="0"
                                    th:max="${selectedNcp == 'NCP2' ? 30 : 15}"
-                                   step="1"
+                                   step="0.01"
                                    required
                                    th:value="${currentScore}"
                                    th:disabled="${currentLocked == true}"
@@ -398,6 +400,14 @@
                 </p>
 
                 <div class="d-flex flex-wrap gap-2">
+
+                    <button type="button"
+                            id="uploadExcelButton"
+                            class="btn btn-outline-success">
+                        <span aria-hidden="true">&#128196;</span>
+                        Upload Excel Sheet
+                    </button>
+
                     <button type="button"
                             id="saveDraftButton"
                             class="btn btn-outline-primary">
@@ -409,10 +419,17 @@
                             class="btn btn-success">
                         Submit All &amp; Lock
                     </button>
+
                 </div>
             </div>
 
         </form>
+
+        <!-- Kept outside bulkMarksForm so draft/submit requests never include a file. -->
+        <input type="file"
+               id="excelFileInput"
+               accept=".xlsx"
+               hidden>
 
         <div class="table-responsive"
              th:if="${selectedNcp == null}">
@@ -486,9 +503,175 @@
 const bulkForm = document.getElementById("bulkMarksForm");
 
 if (bulkForm) {
+
     const submitButton = document.getElementById("submitAllButton");
     const saveDraftButton = document.getElementById("saveDraftButton");
+    const uploadExcelButton = document.getElementById("uploadExcelButton");
+    const excelFileInput = document.getElementById("excelFileInput");
     const messageBox = document.getElementById("bulkMessage");
+
+    // Display messages to the faculty.
+    function showMessage(message, type) {
+        messageBox.className = "alert alert-" + type;
+        messageBox.textContent = message;
+    }
+
+    // Open the Excel file picker.
+    uploadExcelButton.addEventListener("click", function () {
+        excelFileInput.click();
+    });
+
+    // Upload Excel file and populate the corresponding marks inputs.
+    excelFileInput.addEventListener("change", async function () {
+
+        const file = excelFileInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        messageBox.className = "alert d-none";
+        messageBox.textContent = "";
+
+        if (!file.name.toLowerCase().endsWith(".xlsx")) {
+            showMessage(
+                "Please select an Excel workbook in .xlsx format.",
+                "danger"
+            );
+
+            excelFileInput.value = "";
+            return;
+        }
+
+        uploadExcelButton.disabled = true;
+        saveDraftButton.disabled = true;
+        submitButton.disabled = true;
+
+        uploadExcelButton.textContent = "Uploading...";
+
+        try {
+
+            const formData = new FormData();
+
+            formData.append("file", file);
+
+            formData.append(
+                "assignmentId",
+                bulkForm.elements.namedItem("assignmentId").value
+            );
+
+            formData.append(
+                "ncp",
+                bulkForm.elements.namedItem("ncp").value
+            );
+
+            // Include the existing Spring Security CSRF token.
+            const csrfInput = bulkForm.querySelector(
+                'input[type="hidden"][name]'
+            );
+
+            const csrfToken = bulkForm.querySelector(
+                'input[name="_csrf"]'
+            );
+
+            if (csrfToken) {
+                formData.append("_csrf", csrfToken.value);
+            }
+
+            const response = await fetch(
+                bulkForm.dataset.uploadAction,
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    credentials: "same-origin"
+                }
+            );
+
+            let result;
+
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error(
+                    "The server returned an unexpected response. Please reload the page."
+                );
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error ||
+                    result.message ||
+                    "Unable to upload the Excel file."
+                );
+            }
+
+            if (!result.marks || typeof result.marks !== "object") {
+                throw new Error(
+                    "The server returned an invalid marks response."
+                );
+            }
+
+            let populatedCount = 0;
+            let skippedLockedCount = 0;
+
+            for (const [studentId, marks] of Object.entries(result.marks)) {
+
+                const input = bulkForm.elements.namedItem(
+                    "scores[" + studentId + "]"
+                );
+
+                if (!input) {
+                    continue;
+                }
+
+                // Never overwrite marks belonging to locked students.
+                if (input.disabled) {
+                    skippedLockedCount++;
+                    continue;
+                }
+
+                input.value = marks;
+                populatedCount++;
+            }
+
+            let successMessage =
+                populatedCount + " student mark(s) imported successfully.";
+
+            if (skippedLockedCount > 0) {
+                successMessage +=
+                    " " + skippedLockedCount +
+                    " locked student row(s) were skipped.";
+            }
+
+            successMessage +=
+                " Please review the marks before saving or submitting.";
+
+            showMessage(successMessage, "success");
+
+        } catch (error) {
+
+            showMessage(
+                error.message ||
+                "Something went wrong while uploading the Excel file.",
+                "danger"
+            );
+
+        } finally {
+
+            uploadExcelButton.disabled = false;
+            saveDraftButton.disabled = false;
+            submitButton.disabled = false;
+
+            uploadExcelButton.innerHTML =
+                '<span aria-hidden="true">&#128196;</span> Upload Excel Sheet';
+
+            // Allows selecting the same file again if necessary.
+            excelFileInput.value = "";
+        }
+    });
 
     // Save an incomplete draft without triggering final-submission validation.
     saveDraftButton.addEventListener("click", async function () {
@@ -507,6 +690,8 @@ if (bulkForm) {
 
         saveDraftButton.disabled = true;
         submitButton.disabled = true;
+        uploadExcelButton.disabled = true;
+
         saveDraftButton.textContent = "Saving Draft...";
 
         try {
@@ -553,11 +738,15 @@ if (bulkForm) {
 
             saveDraftButton.disabled = false;
             submitButton.disabled = false;
+            uploadExcelButton.disabled = false;
+
             saveDraftButton.textContent = "Save Draft";
         }
     });
 
+    // Final submission with validation and confirmation.
     bulkForm.addEventListener("submit", async function (event) {
+
         event.preventDefault();
 
         messageBox.className = "alert d-none";
@@ -574,20 +763,23 @@ if (bulkForm) {
             return;
         }
 
-        // Validate the entire roster before sending anything.
+        // Validate the entire unlocked roster before sending anything.
         for (const input of unlockedInputs) {
+
             const maximum = Number(input.max);
             const value = Number(input.value);
 
             if (
                 input.value.trim() === "" ||
-                !Number.isInteger(value) ||
+                !Number.isFinite(value) ||
                 value < 0 ||
-                value > maximum
+                value > maximum ||
+                !input.validity.valid
             ) {
                 showMessage(
-                    "Please enter a whole number between 0 and " +
-                    maximum + " for every unlocked student.",
+                    "Please enter a valid mark between 0 and " +
+                    maximum + ", with at most 2 decimal places, " +
+                    "for every unlocked student.",
                     "danger"
                 );
 
@@ -610,6 +802,9 @@ if (bulkForm) {
         }
 
         submitButton.disabled = true;
+        saveDraftButton.disabled = true;
+        uploadExcelButton.disabled = true;
+
         submitButton.textContent = "Submitting...";
 
         try {
@@ -648,32 +843,34 @@ if (bulkForm) {
 
             // Reload so the server supplies the latest locked state.
             submitButton.textContent = "Submitted";
+
             window.setTimeout(function () {
                 window.location.reload();
             }, 1200);
 
         } catch (error) {
+
             showMessage(
                 error.message || "Something went wrong.",
                 "danger"
             );
 
             submitButton.disabled = false;
+            saveDraftButton.disabled = false;
+            uploadExcelButton.disabled = false;
+
             submitButton.textContent = "Submit All & Lock";
         }
     });
-
-    function showMessage(message, type) {
-        messageBox.className = "alert alert-" + type;
-        messageBox.textContent = message;
-    }
 }
 </script>
 
 <script>
 // Keep the cascading filters consistent when an earlier selection changes.
 (function () {
+
     const form = document.getElementById("marksSelectionForm");
+
     if (!form) return;
 
     const program = document.getElementById("programId");
@@ -684,22 +881,34 @@ if (bulkForm) {
     const ncp = document.getElementById("ncp");
 
     function submitAfterReset(fields) {
-        fields.forEach(field => { field.value = ""; });
+        fields.forEach(field => {
+            field.value = "";
+        });
+
         form.submit();
     }
 
     program.addEventListener("change", () =>
         submitAfterReset([classOf, semester, subject, section]));
+
     classOf.addEventListener("change", () =>
         submitAfterReset([semester, subject, section]));
+
     semester.addEventListener("change", () =>
         submitAfterReset([subject, section]));
+
     subject.addEventListener("change", () =>
         submitAfterReset([section]));
-    section.addEventListener("change", () => form.requestSubmit());
+
+    section.addEventListener("change", () =>
+        form.requestSubmit());
+
     ncp.addEventListener("change", () => {
-        if (section.value) form.requestSubmit();
+        if (section.value) {
+            form.requestSubmit();
+        }
     });
+
 })();
 </script>
 

@@ -1,4 +1,3 @@
-
 package com.SP.marksapproval.service;
 
 import com.SP.marksapproval.entity.NcpMarks;
@@ -9,6 +8,7 @@ import com.SP.marksapproval.repository.NcpMarksRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,6 +71,18 @@ public class NcpMarksService {
         }
     }
 
+    /**
+     * Validates that marks are within the assessment maximum
+     * and contain no more than two meaningful decimal places.
+     */
+    private boolean isValidScore(BigDecimal score, int maximumMarks) {
+
+        return score != null
+                && score.compareTo(BigDecimal.ZERO) >= 0
+                && score.compareTo(BigDecimal.valueOf(maximumMarks)) <= 0
+                && score.stripTrailingZeros().scale() <= 2;
+    }
+
     private boolean isLocked(NcpMarks record, String ncp) {
 
         switch (ncp) {
@@ -92,7 +104,7 @@ public class NcpMarksService {
     private void setScoreAndLock(
             NcpMarks record,
             String ncp,
-            Integer score) {
+            BigDecimal score) {
 
         switch (ncp) {
 
@@ -116,7 +128,7 @@ public class NcpMarksService {
         }
     }
 
-        /**
+    /**
      * Saves an incomplete NCP marks draft without locking it.
      */
     @Transactional
@@ -124,7 +136,7 @@ public class NcpMarksService {
             List<Student> students,
             Subject subject,
             String ncp,
-            Map<Integer, Integer> scores) {
+            Map<Integer, BigDecimal> scores) {
 
         if (students == null || students.isEmpty()) {
             throw new IllegalArgumentException(
@@ -171,28 +183,28 @@ public class NcpMarksService {
         }
 
         // Validate all non-empty marks before modifying any records.
-        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+        for (Map.Entry<Integer, BigDecimal> entry : scores.entrySet()) {
 
-            Integer score = entry.getValue();
+            BigDecimal score = entry.getValue();
 
-            if (score != null
-                    && (score < 0 || score > maximumMarks)) {
+            if (score != null && !isValidScore(score, maximumMarks)) {
                 throw new IllegalArgumentException(
                         "Invalid marks for student "
                                 + rosterStudents.get(entry.getKey()).getRollNo()
-                                + ". Enter a whole number between 0 and "
-                                + maximumMarks + ".");
+                                + ". Enter marks between 0 and "
+                                + maximumMarks
+                                + " with at most 2 decimal places.");
             }
         }
 
         Map<Integer, NcpMarks> recordsToSave = new HashMap<>();
 
         // Retrieve existing records and protect locked assessments.
-        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+        for (Map.Entry<Integer, BigDecimal> entry : scores.entrySet()) {
 
             Integer studentId = entry.getKey();
             Student student = rosterStudents.get(studentId);
-            Integer score = entry.getValue();
+            BigDecimal score = entry.getValue();
 
             Optional<NcpMarks> existing =
                     ncpMarksRepository
@@ -229,7 +241,7 @@ public class NcpMarksService {
         }
 
         // Update only the selected NCP. Never change its lock flag.
-        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+        for (Map.Entry<Integer, BigDecimal> entry : scores.entrySet()) {
 
             NcpMarks record = recordsToSave.get(entry.getKey());
 
@@ -237,7 +249,7 @@ public class NcpMarksService {
                 continue;
             }
 
-            Integer score = entry.getValue();
+            BigDecimal score = entry.getValue();
 
             switch (selectedNcp) {
 
@@ -272,7 +284,7 @@ public class NcpMarksService {
             List<Student> students,
             Subject subject,
             String ncp,
-            Map<Integer, Integer> scores) {
+            Map<Integer, BigDecimal> scores) {
 
         // 1. Validate the roster and input.
         if (students == null || students.isEmpty()) {
@@ -321,17 +333,16 @@ public class NcpMarksService {
         // 4. Validate every score before modifying any record.
         for (Student student : students) {
 
-            Integer score = scores.get(student.getStudentId());
+            BigDecimal score = scores.get(student.getStudentId());
 
-            if (score == null
-                    || score < 0
-                    || score > maximumMarks) {
+            if (!isValidScore(score, maximumMarks)) {
 
                 throw new IllegalArgumentException(
                         "Invalid marks for student "
                                 + student.getRollNo()
-                                + ". Enter a whole number between 0 and "
-                                + maximumMarks + ".");
+                                + ". Enter marks between 0 and "
+                                + maximumMarks
+                                + " with at most 2 decimal places.");
             }
         }
 
@@ -396,7 +407,7 @@ public class NcpMarksService {
             Student student,
             Subject subject,
             String ncp,
-            Integer score) {
+            BigDecimal score) {
 
         if (student == null || subject == null) {
             throw new IllegalArgumentException(
@@ -412,10 +423,11 @@ public class NcpMarksService {
         int maximumMarks = getMaximumMarks(ncp);
         String selectedNcp = ncp.trim().toUpperCase();
 
-        if (score == null || score < 0 || score > maximumMarks) {
+        if (!isValidScore(score, maximumMarks)) {
             throw new IllegalArgumentException(
                     "Marks must be between 0 and "
-                            + maximumMarks + ".");
+                            + maximumMarks
+                            + " with at most 2 decimal places.");
         }
 
         NcpMarks record = ncpMarksRepository

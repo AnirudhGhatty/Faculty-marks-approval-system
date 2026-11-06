@@ -1,6 +1,7 @@
 
 package com.SP.marksapproval.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -100,29 +101,29 @@ public class PageController {
                 ncpMarksService.getNcpMarksByStudentId(
                         student.getStudentId());
 
-        Map<Integer, Integer> externalMarksBySubject =
+        Map<Integer, BigDecimal> externalMarksBySubject =
                 new java.util.HashMap<>();
 
         for (NcpMarks record : ncpRecords) {
 
-            int total = 0;
+            BigDecimal total = BigDecimal.ZERO;
             boolean hasSubmittedMarks = false;
 
             if (Boolean.TRUE.equals(record.getNcp1Locked())
                     && record.getNcp1() != null) {
-                total += record.getNcp1();
+                total = total.add(record.getNcp1());
                 hasSubmittedMarks = true;
             }
 
             if (Boolean.TRUE.equals(record.getNcp2Locked())
                     && record.getNcp2() != null) {
-                total += record.getNcp2();
+                total = total.add(record.getNcp2());
                 hasSubmittedMarks = true;
             }
 
             if (Boolean.TRUE.equals(record.getNcp3Locked())
                     && record.getNcp3() != null) {
-                total += record.getNcp3();
+                total = total.add(record.getNcp3());
                 hasSubmittedMarks = true;
             }
 
@@ -284,7 +285,7 @@ public class PageController {
         for (NcpMarks record : records) {
 
             boolean locked = false;
-            Integer score = null;
+            BigDecimal score = null;
 
             switch (ncp) {
 
