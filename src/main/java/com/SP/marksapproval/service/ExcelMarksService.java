@@ -83,6 +83,14 @@ public class ExcelMarksService {
                             "Missing enrollment number at Excel row " + (i + 1));
                 }
 
+                // Find the student in the currently selected roster.
+                Student student = studentsByRollNo.get(rollNo);
+
+                // Ignore records belonging to students outside this roster.
+                if (student == null) {
+                    continue;
+                }
+
                 if (marksText.isEmpty()) {
                     throw new IllegalArgumentException(
                             "Missing marks for " + rollNo
@@ -92,14 +100,6 @@ public class ExcelMarksService {
                 if (!processedRollNumbers.add(rollNo)) {
                     throw new IllegalArgumentException(
                             "Duplicate enrollment number: " + rollNo);
-                }
-
-                Student student = studentsByRollNo.get(rollNo);
-
-                if (student == null) {
-                    throw new IllegalArgumentException(
-                            "Enrollment number not found in the selected roster: "
-                            + rollNo);
                 }
 
                 BigDecimal marks;
