@@ -211,7 +211,7 @@ The following screenshots demonstrate the application's interface and major func
 
 ## 10. Repository
 
-**GitHub Repository:** <YOUR_GITHUB_REPOSITORY_URL>
+**GitHub Repository:** <https://github.com/AnirudhGhatty/Faculty-marks-approval-system.git>
 
 ---
 
