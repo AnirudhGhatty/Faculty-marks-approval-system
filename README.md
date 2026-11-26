@@ -191,23 +191,23 @@ The following screenshots demonstrate the application's interface and major func
 
 ### Login Page
 
-![Login Page](docs/images/login.png)
+![Login Page](loginpage.png)
 
 ### Admin Dashboard
 
-![Admin Dashboard](docs/images/admin-dashboard.png)
+![Admin Dashboard](adminDashboard.png)
 
 ### Faculty Marks Entry
 
-![Faculty Marks Entry](docs/images/faculty-marks-entry.png)
+![Faculty Marks Entry](marks_entry.png)
 
 ### Excel Marks Import
 
-![Excel Marks Import](docs/images/excel-import.png)
+![Excel Marks Import](ExcelImport.png)
 
 ### Student Dashboard
 
-![Student Dashboard](docs/images/student-dashboard.png)
+![Student Dashboard](Student-dashboard.png)
 
 ## 10. Repository
 
