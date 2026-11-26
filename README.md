@@ -75,7 +75,7 @@ The application uses a relational database designed to manage academic programs,
 
 The following Entity-Relationship (ER) diagram illustrates the database schema, entities, attributes, and relationships within the system.
 
-![Faculty Marks Approval System ER Diagram](docs/er-diagram.png)
+![Faculty Marks Approval System ER Diagram](MarksApprovalFinalER.png)
 
 ## 6. Prerequisites
 
@@ -86,7 +86,7 @@ The following software is required to run the application:
 - Git
 - An IDE or code editor such as Visual Studio Code or IntelliJ IDEA
 
-## 6. Installation and Setup
+## 7. Installation and Setup
 
 ### Step 1: Clone the Repository
 
@@ -142,7 +142,7 @@ Once the application starts successfully, open a browser and navigate to:
 http://localhost:8080
 ```
 
-## 7. Excel Marks Import
+## 8. Excel Marks Import
 
 The application provides an Excel import facility for faculty members to simplify marks entry.
 
@@ -163,7 +163,7 @@ The importer:
 
 Imported marks are not automatically saved or locked. Faculty members can review the values and then use the existing **Save Draft** or **Submit All & Lock** functionality.
 
-## 8. Project Structure
+## 9. Project Structure
 
 The application follows the standard Spring Boot project structure.
 
@@ -193,7 +193,7 @@ marksapproval/
 
 *This is a simplified representation of the project directory.*
 
-## 9. Application Screenshots
+## 10. Application Screenshots
 
 The following screenshots demonstrate the application's interface and major functionalities.
 
@@ -217,7 +217,7 @@ The following screenshots demonstrate the application's interface and major func
 
 ![Student Dashboard](Student_dashboard.png)
 
-## 10. Repository
+## 11. Repository
 
 **GitHub Repository:** <https://github.com/AnirudhGhatty/Faculty-marks-approval-system.git>
 
