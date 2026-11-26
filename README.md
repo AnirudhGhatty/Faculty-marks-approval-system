@@ -69,7 +69,15 @@ The application follows a layered architecture:
 - **Entity Layer:** Represents the application's database entities.
 - **View Layer:** Provides the user interface using Thymeleaf, HTML, CSS, JavaScript, and Bootstrap.
 
-## 5. Prerequisites
+## 5. Database Design
+
+The application uses a relational database designed to manage academic programs, students, faculty members, subjects, and assessment marks.
+
+The following Entity-Relationship (ER) diagram illustrates the database schema, entities, attributes, and relationships within the system.
+
+![Faculty Marks Approval System ER Diagram](docs/er-diagram.png)
+
+## 6. Prerequisites
 
 The following software is required to run the application:
 
