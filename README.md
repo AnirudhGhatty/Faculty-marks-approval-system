@@ -207,7 +207,7 @@ The following screenshots demonstrate the application's interface and major func
 
 ### Student Dashboard
 
-![Student Dashboard](Student-dashboard.png)
+![Student Dashboard](Student_dashboard.png)
 
 ## 10. Repository
 
